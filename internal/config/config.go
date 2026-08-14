@@ -7,15 +7,16 @@ import (
 )
 
 type Config struct {
-	ServerPort string `mapstructure:"SERVER_PORT"`
-	GinMode    string `mapstructure:"GIN_MODE"`
-	DBHost     string `mapstructure:"DB_HOST"`
-	DBPort     string `mapstructure:"DB_PORT"`
-	DBUser     string `mapstructure:"DB_USER"`
-	DBPassword string `mapstructure:"DB_PASSWORD"`
-	DBName     string `mapstructure:"DB_NAME"`
-	DBSSLMode  string `mapstructure:"DB_SSLMODE"`
-	JWTSecret  string `mapstructure:"JWT_SECRET"`
+	ServerPort  string `mapstructure:"SERVER_PORT"`
+	GinMode     string `mapstructure:"GIN_MODE"`
+	DatabaseURL string `mapstructure:"DATABASE_URL"`
+	DBHost      string `mapstructure:"DB_HOST"`
+	DBPort      string `mapstructure:"DB_PORT"`
+	DBUser      string `mapstructure:"DB_USER"`
+	DBPassword  string `mapstructure:"DB_PASSWORD"`
+	DBName      string `mapstructure:"DB_NAME"`
+	DBSSLMode   string `mapstructure:"DB_SSLMODE"`
+	JWTSecret   string `mapstructure:"JWT_SECRET"`
 }
 
 var (
@@ -41,6 +42,7 @@ func Load() {
 
 		viper.BindEnv("SERVER_PORT")
 		viper.BindEnv("GIN_MODE")
+		viper.BindEnv("DATABASE_URL")
 		viper.BindEnv("DB_HOST")
 		viper.BindEnv("DB_PORT")
 		viper.BindEnv("DB_USER")
