@@ -7,7 +7,7 @@ import (
 )
 
 type Config struct {
-	ServerPort  string `mapstructure:"SERVER_PORT"`
+	Port        string `mapstructure:"PORT"`
 	GinMode     string `mapstructure:"GIN_MODE"`
 	DatabaseURL string `mapstructure:"DATABASE_URL"`
 	DBHost      string `mapstructure:"DB_HOST"`
@@ -30,7 +30,7 @@ func Load() {
 		viper.SetConfigType("env")
 		viper.AddConfigPath(".")
 
-		viper.SetDefault("SERVER_PORT", "8080")
+		viper.SetDefault("PORT", "8080")
 		viper.SetDefault("GIN_MODE", "debug")
 		viper.SetDefault("DB_HOST", "localhost")
 		viper.SetDefault("DB_PORT", "5432")
@@ -40,7 +40,7 @@ func Load() {
 		viper.SetDefault("DB_SSLMODE", "disable")
 		viper.SetDefault("JWT_SECRET", "change-me-in-production")
 
-		viper.BindEnv("SERVER_PORT")
+		viper.BindEnv("PORT")
 		viper.BindEnv("GIN_MODE")
 		viper.BindEnv("DATABASE_URL")
 		viper.BindEnv("DB_HOST")

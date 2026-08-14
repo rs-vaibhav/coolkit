@@ -61,13 +61,13 @@ func main() {
 	r := router.Setup(healthHandler, authHandler, clubHandler, eventHandler, eventRoleHandler, cfg.JWTSecret)
 
 	srv := &http.Server{
-		Addr:    ":" + cfg.ServerPort,
+		Addr:    ":" + cfg.Port,
 		Handler: r,
 	}
 
 	// Start server
 	go func() {
-		log.Printf("🚀 CoolKit server starting on http://localhost:%s", cfg.ServerPort)
+		log.Printf("🚀 CoolKit server starting on http://0.0.0.0:%s", cfg.Port)
 		log.Printf("   Mode: %s", cfg.GinMode)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("listen: %s\n", err)
