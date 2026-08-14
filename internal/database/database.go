@@ -18,7 +18,12 @@ func Connect(cfg *config.Config) (*gorm.DB, error) {
 			cfg.DBHost, cfg.DBPort, cfg.DBUser, cfg.DBPassword, cfg.DBName, cfg.DBSSLMode)
 	}
 
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	db, err := gorm.Open(postgres.New(postgres.Config{
+		DSN:                  dsn,
+		PreferSimpleProtocol: true, // Required for connection poolers like Supavisor (Port 6543)
+	}), &gorm.Config{
+		PrepareStmt: false,
+	})
 	if err != nil {
 		return nil, err
 	}
