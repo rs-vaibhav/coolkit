@@ -1,0 +1,33 @@
+version: "3.8"
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${DB_USER:-coolkit}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-coolkit}
+      POSTGRES_DB: ${DB_NAME:-coolkit}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U coolkit -d coolkit"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    env_file: .env
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_HOST: db
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

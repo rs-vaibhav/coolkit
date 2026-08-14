@@ -1,0 +1,78 @@
+:root {
+  /* Color Palette - FOSS Green Light Theme */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8fafc;
+  --bg-tertiary: #f1f5f9;
+  
+  --accent-blue: #6366f1;
+  --accent-purple: #8b5cf6;
+  --accent-cyan: #06b6d4;
+  --accent-green: #16a34a; /* FOSS Green */
+  --accent-amber: #f59e0b;
+  --accent-rose: #f43f5e;
+  
+  /* Glassmorphism surfaces - Light mode */
+  --surface-1: rgba(255, 255, 255, 0.8);
+  --surface-2: rgba(255, 255, 255, 0.9);
+  --surface-3: #ffffff;
+  --border-subtle: rgba(0, 0, 0, 0.08);
+  --border-bright: rgba(0, 0, 0, 0.15);
+  
+  /* Text - Light mode */
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+  
+  /* Typography */
+  --font-family: 'Inter', sans-serif;
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 2rem;
+  --text-4xl: 2.5rem;
+  --text-5xl: 3.5rem;
+  
+  /* Spacing */
+  --spacing-1: 0.25rem;
+  --spacing-2: 0.5rem;
+  --spacing-3: 0.75rem;
+  --spacing-4: 1rem;
+  --spacing-6: 1.5rem;
+  --spacing-8: 2rem;
+  --spacing-12: 3rem;
+  --spacing-16: 4rem;
+  --spacing-24: 6rem;
+  
+  /* Border Radius */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
+  --radius-full: 9999px;
+  
+  /* Shadows - Light mode */
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.05);
+  --shadow-lg: 0 10px 15px rgba(0,0,0,0.05);
+  --shadow-glow: 0 0 20px rgba(22, 163, 74, 0.2);
+  --shadow-glow-accent: 0 0 20px rgba(22, 163, 74, 0.4);
+  
+  /* Transitions */
+  --transition-fast: 150ms ease;
+  --transition-normal: 300ms ease;
+  --transition-slow: 500ms ease;
+  
+  /* Gradients */
+  --gradient-primary: linear-gradient(135deg, var(--accent-green), #15803d);
+  --gradient-hero: radial-gradient(circle at center, rgba(22, 163, 74, 0.1), #f8fafc 70%);
+  
+  /* Z-Index */
+  --z-negative: -1;
+  --z-normal: 1;
+  --z-nav: 100;
+  --z-modal: 1000;
+}

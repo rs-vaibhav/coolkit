@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — CoolKit</title>
+  
+  <link rel="stylesheet" href="css/base.css?v=6">
+  <link rel="stylesheet" href="css/components.css?v=6">
+  <link rel="stylesheet" href="css/dashboard.css?v=6">
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="nav-container">
+      <a href="/dashboard" class="nav-brand">CoolKit</a>
+      <div class="nav-links">
+        <div style="display: flex; align-items: center; gap: var(--spacing-3);">
+          <div class="avatar" id="user-avatar">U</div>
+          <span id="user-name" style="font-weight: 500;">User Name</span>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="window.CoolKitAuth.logout()">Logout</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Dashboard Layout -->
+  <main class="dashboard">
+    <div class="dashboard-container">
+      
+      <div class="dashboard-header">
+        <h1 class="dashboard-title">Your Clubs</h1>
+        <div class="dashboard-actions">
+          <button class="btn btn-secondary" onclick="document.getElementById('join-modal').classList.add('active')">Join Club</button>
+          <button class="btn btn-primary" onclick="document.getElementById('create-modal').classList.add('active')">Create Club</button>
+        </div>
+      </div>
+
+      <!-- Clubs Grid -->
+      <div id="clubs-grid" class="clubs-grid">
+        <!-- Populated by JS -->
+      </div>
+
+      <!-- Empty State (Hidden by default) -->
+      <div id="empty-state" class="dashboard-empty" style="display: none;">
+        <div style="font-size: 64px; margin-bottom: var(--spacing-4);">🏕️</div>
+        <h3>No clubs yet</h3>
+        <p>Create your first club or join an existing one to get started.</p>
+        <div class="actions">
+          <button class="btn btn-secondary" onclick="document.getElementById('join-modal').classList.add('active')">Join Club</button>
+          <button class="btn btn-primary" onclick="document.getElementById('create-modal').classList.add('active')">Create Club</button>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Create Club Modal -->
+  <div id="create-modal" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 style="font-size: var(--text-2xl);">Create New Club</h2>
+        <button class="btn-icon btn-ghost" onclick="this.closest('.modal-overlay').classList.remove('active')">✖</button>
+      </div>
+      <div class="modal-body">
+        <div id="create-error" class="alert alert-error" style="display: none;"></div>
+        <form id="create-club-form">
+          <div class="form-group">
+            <label class="form-label">Club Name</label>
+            <input type="text" class="form-input" id="create-name" required placeholder="e.g. FOSS Club">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Description</label>
+            <textarea class="form-input" id="create-desc" placeholder="What is your club about?"></textarea>
+          </div>
+          <div class="modal-footer" style="margin-top: var(--spacing-6);">
+            <button type="button" class="btn btn-ghost" onclick="this.closest('.modal-overlay').classList.remove('active')">Cancel</button>
+            <button type="submit" class="btn btn-primary">Create Club</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Join Club Modal -->
+  <div id="join-modal" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 style="font-size: var(--text-2xl);">Join a Club</h2>
+        <button class="btn-icon btn-ghost" onclick="this.closest('.modal-overlay').classList.remove('active')">✖</button>
+      </div>
+      <div class="modal-body">
+        <div id="join-error" class="alert alert-error" style="display: none;"></div>
+        <form id="join-club-form">
+          <div class="form-group">
+            <label class="form-label">Club ID</label>
+            <input type="text" class="form-input" id="join-id" required placeholder="Enter club ID">
+            <p style="color: var(--text-muted); font-size: var(--text-sm); margin-top: var(--spacing-2);">Ask a club administrator for the Club ID</p>
+          </div>
+          <div class="modal-footer" style="margin-top: var(--spacing-6);">
+            <button type="button" class="btn btn-ghost" onclick="this.closest('.modal-overlay').classList.remove('active')">Cancel</button>
+            <button type="submit" class="btn btn-primary">Join</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/dashboard.js"></script>
+</body>
+</html>

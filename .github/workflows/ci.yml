@@ -1,0 +1,67 @@
+name: CI
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: latest
+
+  test:
+    runs-on: ubuntu-latest
+    needs: lint
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: coolkit
+          POSTGRES_PASSWORD: coolkit
+          POSTGRES_DB: coolkit_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U coolkit"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+      - run: go mod download
+      - name: Run tests
+        run: go test ./... -v -cover -race
+        env:
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_USER: coolkit
+          DB_PASSWORD: coolkit
+          DB_NAME: coolkit_test
+          DB_SSLMODE: disable
+          JWT_SECRET: test-secret
+          GIN_MODE: test
+
+  build:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+      - run: CGO_ENABLED=0 go build -o coolkit ./cmd/server

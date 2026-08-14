@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Event Workspace — CoolKit</title>
+  
+  <link rel="stylesheet" href="css/base.css?v=6">
+  <link rel="stylesheet" href="css/components.css?v=6">
+  <link rel="stylesheet" href="css/club.css?v=6">
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="nav-container">
+      <a href="/dashboard" class="nav-brand">CoolKit</a>
+      <div class="nav-links">
+        <div style="display: flex; align-items: center; gap: var(--spacing-3);">
+          <div class="avatar" id="user-avatar">U</div>
+          <span id="user-name" style="font-weight: 500;">User Name</span>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="window.CoolKitAuth.logout()">Logout</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Event Workspace Layout -->
+  <main class="club-workspace">
+    
+    <!-- Sidebar -->
+    <aside class="club-sidebar">
+      <a href="#" id="back-to-club" class="btn btn-ghost btn-sm" style="margin-bottom: var(--spacing-4); margin-left: -12px;">&larr; Back to Club</a>
+      
+      <h1 class="club-title" id="event-title">Loading...</h1>
+      <p class="club-desc" id="event-desc">Loading details...</p>
+      
+      <div class="club-meta" style="flex-direction: column; align-items: flex-start; gap: var(--spacing-2); margin-top: var(--spacing-4);">
+        <span class="badge badge-primary" id="event-date">Loading...</span>
+        <span class="badge badge-secondary" id="event-location">Loading...</span>
+      </div>
+
+      <nav class="club-nav" style="margin-top: var(--spacing-6);">
+        <button class="tab-btn active" data-tab="tab-overview">Overview</button>
+        <button class="tab-btn" data-tab="tab-hierarchy">Team Hierarchy</button>
+      </nav>
+    </aside>
+
+    <!-- Main Content Area -->
+    <div class="club-content">
+      
+      <!-- Overview Tab -->
+      <div id="tab-overview" class="tab-content active">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-4);">
+          <h3 style="margin: 0;">Event Details</h3>
+        </div>
+        <div class="card">
+          <p id="event-full-desc">This is the event overview.</p>
+        </div>
+      </div>
+
+      <!-- Hierarchy Tab -->
+      <div id="tab-hierarchy" class="tab-content" style="display: none;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-4);">
+          <h3 style="margin: 0;">Operational Hierarchy</h3>
+          <button class="btn btn-primary btn-sm" id="btn-assign-role" style="display: none;" onclick="document.getElementById('assign-role-modal').classList.add('active')">Assign Role</button>
+        </div>
+        <div class="members-list" id="roles-list">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+      
+    </div>
+  </main>
+
+  <!-- Assign Role Modal -->
+  <div id="assign-role-modal" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Assign Responsibility</h3>
+        <button class="btn-icon btn-ghost" onclick="this.closest('.modal-overlay').classList.remove('active')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="assign-role-form">
+          <div class="form-group">
+            <label class="form-label">Select Club Member</label>
+            <select id="role-user-id" class="form-input" required>
+              <option value="">Loading members...</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Role / Responsibility</label>
+            <input type="text" id="role-name" class="form-input" required placeholder="e.g. Finance Operations">
+          </div>
+          <div id="role-error" style="color: #ff4d4f; font-size: 14px; margin-bottom: 16px; display: none;"></div>
+          <button type="submit" class="btn btn-primary" style="width: 100%;">Assign Role</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/event.js"></script>
+</body>
+</html>

@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="CoolKit - The Operating System for Student Clubs. Centralize your club management effortlessly.">
+  <title>CoolKit — The Operating System for Student Clubs</title>
+  
+  <link rel="stylesheet" href="css/base.css?v=6">
+  <link rel="stylesheet" href="css/components.css?v=6">
+  <link rel="stylesheet" href="css/landing.css?v=6">
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="nav-container">
+      <a href="#" class="nav-brand">CoolKit</a>
+      <div class="nav-links">
+        <a href="#features" class="btn btn-ghost">Features</a>
+        <a href="#" class="btn btn-ghost" onclick="window.CoolKitAuth.openAuthModal('login')">Login</a>
+        <a href="#" class="btn btn-primary" onclick="window.CoolKitAuth.openAuthModal('register')">Sign Up</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="hero-bg">
+      <div class="hero-orb orb-1"></div>
+      <div class="hero-orb orb-2"></div>
+      <div class="hero-orb orb-3"></div>
+    </div>
+    
+    <div class="hero-content">
+      <div class="hero-badge">✨ Built by FOSS Club, SRM IST</div>
+      <h1 class="hero-title">The Operating System for <span>Student Clubs</span></h1>
+      <p class="hero-subtitle">Centralize your club management. Events, members, finances, tasks — all in one modern platform.</p>
+      
+      <div class="hero-cta">
+        <button class="btn btn-primary btn-lg" onclick="window.CoolKitAuth.openAuthModal('register')">Get Started</button>
+        <a href="#features" class="btn btn-secondary btn-lg">Learn More</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section id="features" class="features">
+    <div class="features-header">
+      <h2>Everything Your Club Needs</h2>
+      <p class="hero-subtitle">Powerful tools designed specifically for student organizations.</p>
+    </div>
+    
+    <div class="features-grid">
+      <div class="feature-card card">
+        <div class="feature-icon" style="color: var(--accent-blue)">📅</div>
+        <h3 class="feature-title">Event Management</h3>
+        <p class="feature-description">Plan, schedule, and track events. Manage registrations and attendance effortlessly.</p>
+      </div>
+      
+      <div class="feature-card card">
+        <div class="feature-icon" style="color: var(--accent-purple)">👥</div>
+        <h3 class="feature-title">Member Management</h3>
+        <p class="feature-description">Organize your team. Track roles, permissions, and participation history.</p>
+      </div>
+      
+      <div class="feature-card card">
+        <div class="feature-icon" style="color: var(--accent-green)">💰</div>
+        <h3 class="feature-title">Finance Tracking</h3>
+        <p class="feature-description">Budget tracking, expense records, and financial summaries in one place.</p>
+      </div>
+      
+      <div class="feature-card card">
+        <div class="feature-icon" style="color: var(--accent-amber)">✅</div>
+        <h3 class="feature-title">Task Management</h3>
+        <p class="feature-description">Assign responsibilities, set deadlines, and monitor completion.</p>
+      </div>
+      
+      <div class="feature-card card">
+        <div class="feature-icon" style="color: var(--accent-rose)">📢</div>
+        <h3 class="feature-title">Announcements</h3>
+        <p class="feature-description">Keep everyone informed with prominent, real-time club announcements.</p>
+      </div>
+      
+      <div class="feature-card card">
+        <div class="feature-icon" style="color: var(--accent-cyan)">📊</div>
+        <h3 class="feature-title">Analytics</h3>
+        <p class="feature-description">Gain insights into member growth, engagement, and club performance.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Problem/Solution Section -->
+  <section class="problem-section">
+    <div class="problem-container">
+      <div>
+        <h2 style="font-size: var(--text-3xl); margin-bottom: var(--spacing-6)">The Old Way</h2>
+        <ul class="problem-list">
+          <li>❌ Scattered information across WhatsApp, Drive, and Sheets</li>
+          <li>❌ Manual tracking of members and attendance</li>
+          <li>❌ Lost institutional knowledge during handovers</li>
+          <li>❌ Messy financial records</li>
+        </ul>
+      </div>
+      
+      <div>
+        <h2 style="font-size: var(--text-3xl); margin-bottom: var(--spacing-6)">The CoolKit Way</h2>
+        <ul class="solution-list">
+          <li>✅ Centralized source of truth for everything</li>
+          <li>✅ Automated member and role management</li>
+          <li>✅ Seamless transitions between core teams</li>
+          <li>✅ Transparent and easy finance tracking</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="cta-section">
+    <div class="cta-content">
+      <h2>Ready to Transform Your Club?</h2>
+      <p class="hero-subtitle" style="margin-bottom: var(--spacing-8)">Join hundreds of other student organizations using CoolKit today.</p>
+      <button class="btn btn-primary btn-lg" onclick="window.CoolKitAuth.openAuthModal('register')">Get Started for Free</button>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <p>Built with ❤️ by FOSS Club, SRM IST &copy; 2024 CoolKit.</p>
+  </footer>
+
+  <!-- Auth Modal -->
+  <div id="auth-modal" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <div style="display: flex; gap: var(--spacing-4);">
+          <button class="tab-btn active" id="tab-login" onclick="window.CoolKitAuth.switchAuthTab('login')" style="background:none;border:none;color:white;font-size:1.1rem;font-weight:600;cursor:pointer;">Login</button>
+          <button class="tab-btn" id="tab-register" onclick="window.CoolKitAuth.switchAuthTab('register')" style="background:none;border:none;color:var(--text-secondary);font-size:1.1rem;font-weight:600;cursor:pointer;">Register</button>
+        </div>
+        <button class="btn-icon btn-ghost" onclick="window.CoolKitAuth.closeAuthModal()">✖</button>
+      </div>
+      
+      <div class="modal-body">
+        <div id="auth-error" class="alert alert-error" style="display: none;"></div>
+        
+        <!-- Login Form -->
+        <form id="login-form">
+          <div class="form-group">
+            <label class="form-label">Email</label>
+            <input type="email" class="form-input" id="login-email" required placeholder="you@example.com">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Password</label>
+            <input type="password" class="form-input" id="login-password" required placeholder="••••••••">
+          </div>
+          <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: var(--spacing-4);">Login</button>
+        </form>
+
+        <!-- Register Form -->
+        <form id="register-form" style="display: none;">
+          <div class="form-group">
+            <label class="form-label">Full Name</label>
+            <input type="text" class="form-input" id="register-name" required placeholder="John Doe">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email</label>
+            <input type="email" class="form-input" id="register-email" required placeholder="you@example.com">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Password</label>
+            <input type="password" class="form-input" id="register-password" required placeholder="••••••••" minlength="6">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Confirm Password</label>
+            <input type="password" class="form-input" id="register-confirm" required placeholder="••••••••" minlength="6">
+          </div>
+          <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: var(--spacing-4);">Create Account</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script src="js/auth.js"></script>
+</body>
+</html>

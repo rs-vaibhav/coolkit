@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Club — CoolKit</title>
+  
+  <link rel="stylesheet" href="css/base.css?v=6">
+  <link rel="stylesheet" href="css/components.css?v=6">
+  <link rel="stylesheet" href="css/club.css?v=6">
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="nav-container">
+      <a href="/dashboard" class="nav-brand">CoolKit</a>
+      <div class="nav-links">
+        <div style="display: flex; align-items: center; gap: var(--spacing-3);">
+          <div class="avatar" id="user-avatar">U</div>
+          <span id="user-name" style="font-weight: 500;">User Name</span>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="window.CoolKitAuth.logout()">Logout</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Club Workspace -->
+  <main class="club-workspace">
+    
+    <div class="club-header">
+      <a href="/dashboard" class="btn btn-ghost btn-sm" style="margin-bottom: var(--spacing-4); margin-left: -12px;">← Back to Dashboard</a>
+      
+      <div class="club-header-top">
+        <h1 class="club-title" id="club-name">Loading...</h1>
+        <span class="badge badge-primary" id="user-role">Member</span>
+      </div>
+      
+      <p class="club-description" id="club-desc">Loading description...</p>
+      
+      <div class="club-meta">
+        <span class="badge badge-secondary" id="member-count">0 Members</span>
+      </div>
+    </div>
+
+    <!-- Tab Nav -->
+    <div class="club-nav">
+      <button class="tab-btn active" data-tab="overview">Overview</button>
+      <button class="tab-btn" data-tab="members">Members</button>
+      <button class="tab-btn" data-tab="events">Events</button>
+    </div>
+
+    <!-- Tab Contents -->
+    <div id="tab-overview" class="tab-content">
+      <div class="overview-stats">
+        <div class="card stat-card">
+          <span class="stat-label">Total Members</span>
+          <span class="stat-value" id="stat-members">0</span>
+        </div>
+        <div class="card stat-card">
+          <span class="stat-label">Upcoming Events</span>
+          <span class="stat-value" id="stat-events">0</span>
+        </div>
+      </div>
+      
+      <div class="card">
+        <h3>Recent Activity</h3>
+        <p style="color: var(--text-muted); margin-top: var(--spacing-4);">No recent activity.</p>
+      </div>
+    </div>
+
+    <div id="tab-members" class="tab-content" style="display: none;">
+      <div class="members-list" id="members-list">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+
+    <div id="tab-events" class="tab-content" style="display: none;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-4);">
+        <h3 style="margin: 0;">Club Events</h3>
+        <button class="btn btn-primary btn-sm" id="btn-create-event" style="display: none;" onclick="document.getElementById('create-event-modal').classList.add('active')">Create Event</button>
+      </div>
+      <div class="events-list" id="events-list">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Create Event Modal -->
+  <div id="create-event-modal" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Create Event</h3>
+        <button class="btn-close" onclick="document.getElementById('create-event-modal').classList.remove('active')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="create-event-form">
+          <div class="form-group">
+            <label class="form-label">Title</label>
+            <input type="text" id="event-title" class="form-input" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Description</label>
+            <textarea id="event-desc" class="form-input" rows="3"></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Date & Time</label>
+            <input type="datetime-local" id="event-date" class="form-input" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Location</label>
+            <input type="text" id="event-loc" class="form-input">
+          </div>
+          <div id="event-error" style="color: #ff4d4f; font-size: 14px; margin-bottom: 16px; display: none;"></div>
+          <button type="submit" class="btn btn-primary" style="width: 100%;">Create Event</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/api.js?v=4"></script>
+  <script src="js/auth.js?v=4"></script>
+  <script src="js/club.js?v=4"></script>
+</body>
+</html>
