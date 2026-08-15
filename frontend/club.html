@@ -51,6 +51,8 @@
       <button class="tab-btn active" data-tab="overview">Overview</button>
       <button class="tab-btn" data-tab="members">Members</button>
       <button class="tab-btn" data-tab="events">Events</button>
+      <button class="tab-btn" data-tab="resources">Resources</button>
+      <button class="tab-btn" data-tab="analytics">Analytics</button>
       <button class="tab-btn" data-tab="requests" id="tab-btn-requests" style="display: none;">Requests</button>
     </div>
 
@@ -99,6 +101,80 @@
       </div>
       <div class="events-list" id="events-list">
         <!-- Populated by JS -->
+      </div>
+    </div>
+
+    <div id="tab-resources" class="tab-content" style="display: none;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-4);">
+        <h3 style="margin: 0;">Resources & Assets</h3>
+        <button class="btn btn-primary btn-sm" id="btn-create-resource" style="display: none;" onclick="document.getElementById('create-resource-modal').classList.add('active')">Add Resource</button>
+      </div>
+      <div class="events-list" id="resources-list">
+        <!-- Populated by JS -->
+      </div>
+      <div id="admin-bookings-section" style="display: none; margin-top: var(--spacing-8);">
+        <h3 style="margin-bottom: var(--spacing-4);">Resource Booking Requests</h3>
+        <div class="card" style="padding: 0; overflow-x: auto;">
+          <table style="width: 100%; border-collapse: collapse; text-align: left;">
+            <thead>
+              <tr style="border-bottom: 1px solid var(--border-color); color: var(--text-secondary); font-size: var(--text-sm);">
+                <th style="padding: var(--spacing-3);">Resource</th>
+                <th style="padding: var(--spacing-3);">Requested By</th>
+                <th style="padding: var(--spacing-3);">Time Range</th>
+                <th style="padding: var(--spacing-3);">Purpose</th>
+                <th style="padding: var(--spacing-3);">Status</th>
+                <th style="padding: var(--spacing-3); text-align: right;">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="admin-bookings-list">
+              <!-- Populated by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div id="tab-analytics" class="tab-content" style="display: none;">
+      <div class="overview-stats" style="margin-bottom: var(--spacing-6);">
+        <div class="card stat-card">
+          <span class="stat-label">Total Members</span>
+          <span class="stat-value" id="analytics-total-members">0</span>
+        </div>
+        <div class="card stat-card">
+          <span class="stat-label">Total Events</span>
+          <span class="stat-value" id="analytics-total-events">0</span>
+        </div>
+        <div class="card stat-card">
+          <span class="stat-label">Tasks Done Rate</span>
+          <span class="stat-value" id="analytics-task-rate">0%</span>
+        </div>
+        <div class="card stat-card">
+          <span class="stat-label">Net Balance</span>
+          <span class="stat-value" id="analytics-balance">₹0</span>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: var(--spacing-6);">
+        <div class="card" style="padding: var(--spacing-4);">
+          <h4 style="margin: 0 0 var(--spacing-4) 0; font-size: var(--text-base);">📈 Member Growth Trend</h4>
+          <div id="member-growth-chart-container" style="height: 240px; display: flex; align-items: center; justify-content: center; position: relative;">
+            <svg id="member-growth-chart" style="width: 100%; height: 100%; min-height: 200px;"></svg>
+          </div>
+        </div>
+
+        <div class="card" style="padding: var(--spacing-4);">
+          <h4 style="margin: 0 0 var(--spacing-4) 0; font-size: var(--text-base);">📋 Task Distribution</h4>
+          <div id="task-chart-container" style="height: 240px; display: flex; align-items: center; justify-content: center; position: relative;">
+            <svg id="task-chart" style="width: 100%; height: 100%; min-height: 200px;"></svg>
+          </div>
+        </div>
+
+        <div class="card" style="padding: var(--spacing-4); grid-column: span 1;">
+          <h4 style="margin: 0 0 var(--spacing-4) 0; font-size: var(--text-base);">💰 Finance Breakdown</h4>
+          <div id="finance-chart-container" style="height: 240px; display: flex; align-items: center; justify-content: center; position: relative;">
+            <svg id="finance-chart" style="width: 100%; height: 100%; min-height: 200px;"></svg>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -162,6 +238,66 @@
             </select>
           </div>
           <button type="submit" class="btn btn-primary" style="width: 100%;">Post Announcement</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create Resource Modal -->
+  <div id="create-resource-modal" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Add Club Resource</h3>
+        <button class="btn-icon btn-ghost" onclick="document.getElementById('create-resource-modal').classList.remove('active')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="create-resource-form">
+          <div class="form-group">
+            <label class="form-label">Resource Name</label>
+            <input type="text" id="resource-name" class="form-input" required placeholder="e.g. Clubroom A, Sony Projector">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Description</label>
+            <textarea id="resource-desc" class="form-input" rows="3" placeholder="Specify details, location, or instructions..."></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Quantity</label>
+            <input type="number" id="resource-qty" class="form-input" required min="1" value="1">
+          </div>
+          <button type="submit" class="btn btn-primary" style="width: 100%;">Add Resource</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Book Resource Modal -->
+  <div id="book-resource-modal" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Book Resource</h3>
+        <button class="btn-icon btn-ghost" onclick="document.getElementById('book-resource-modal').classList.remove('active')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="book-resource-form">
+          <input type="hidden" id="book-resource-id">
+          <div class="form-group">
+            <label class="form-label">Resource</label>
+            <input type="text" id="book-resource-name-display" class="form-input" readonly style="background-color: var(--bg-muted);">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Start Date & Time</label>
+            <input type="datetime-local" id="book-start-time" class="form-input" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">End Date & Time</label>
+            <input type="datetime-local" id="book-end-time" class="form-input" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Purpose of Booking</label>
+            <textarea id="book-purpose" class="form-input" rows="3" required placeholder="Describe what the resource will be used for..."></textarea>
+          </div>
+          <div id="booking-error" style="color: #ff4d4f; font-size: 14px; margin-bottom: 16px; display: none;"></div>
+          <button type="submit" class="btn btn-primary" style="width: 100%;">Request Booking</button>
         </form>
       </div>
     </div>

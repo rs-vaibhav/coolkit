@@ -41,7 +41,7 @@ func main() {
 	}
 
 	// Auto-migrate models
-	err = db.AutoMigrate(&model.User{}, &model.Club{}, &model.ClubMember{}, &model.Event{}, &model.EventRole{}, &model.Announcement{}, &model.Task{}, &model.FinanceEntry{}, &model.JoinRequest{})
+	err = db.AutoMigrate(&model.User{}, &model.Club{}, &model.ClubMember{}, &model.Event{}, &model.EventRole{}, &model.Announcement{}, &model.Task{}, &model.FinanceEntry{}, &model.JoinRequest{}, &model.Resource{}, &model.Booking{})
 	if err != nil {
 		log.Fatalf("Failed to auto-migrate models: %v", err)
 	}
@@ -56,11 +56,15 @@ func main() {
 	taskRepo := repository.NewTaskRepository(db)
 	financeRepo := repository.NewFinanceRepository(db)
 	joinRequestRepo := repository.NewJoinRequestRepository(db)
+	resourceRepo := repository.NewResourceRepository(db)
+	bookingRepo := repository.NewBookingRepository(db)
 
 	// Initialize services
 	authService := service.NewAuthService(userRepo, cfg.JWTSecret)
 	clubService := service.NewClubService(clubRepo, joinRequestRepo)
 	eventService := service.NewEventService(eventRepo, clubRepo, eventRoleRepo)
+	bookingService := service.NewBookingService(clubRepo, resourceRepo, bookingRepo)
+	analyticsService := service.NewAnalyticsService(db, clubRepo, eventRepo)
 
 	// Initialize handlers
 	healthHandler := handler.NewHealthHandler(db)
@@ -72,9 +76,11 @@ func main() {
 	announcementHandler := handler.NewAnnouncementHandler(announcementRepo, clubRepo)
 	taskHandler := handler.NewTaskHandler(taskRepo, eventRepo, clubRepo)
 	financeHandler := handler.NewFinanceHandler(financeRepo, eventRepo, clubRepo)
+	bookingHandler := handler.NewBookingHandler(bookingService)
+	analyticsHandler := handler.NewAnalyticsHandler(analyticsService)
 
 	// Set up router
-	r := router.Setup(healthHandler, authHandler, clubHandler, memberHandler, eventHandler, eventRoleHandler, announcementHandler, taskHandler, financeHandler, cfg.JWTSecret)
+	r := router.Setup(healthHandler, authHandler, clubHandler, memberHandler, eventHandler, eventRoleHandler, announcementHandler, taskHandler, financeHandler, bookingHandler, analyticsHandler, cfg.JWTSecret)
 
 	srv := &http.Server{
 		Addr:    ":" + cfg.Port,

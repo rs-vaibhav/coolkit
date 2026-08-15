@@ -21,6 +21,8 @@ document.addEventListener('DOMContentLoaded', () => {
   setupTabs();
   setupEventForm(clubId);
   setupAnnouncementForm(clubId);
+  setupResourceForm(clubId);
+  setupBookResourceForm(clubId);
 });
 
 async function loadClub(id) {
@@ -412,6 +414,449 @@ function setupTabs() {
       btn.classList.add('active');
       const tabId = `tab-${btn.dataset.tab}`;
       document.getElementById(tabId).style.display = 'block';
+
+      if (btn.dataset.tab === 'resources') {
+        loadResources(window._clubId);
+      } else if (btn.dataset.tab === 'analytics') {
+        loadAnalytics(window._clubId);
+      }
     });
   });
+}
+
+// ─── Resources & Bookings ──────────────────────────────
+async function loadResources(clubId) {
+  try {
+    const res = await window.CoolKitAPI.api(`/clubs/${clubId}/resources`);
+    const resources = res.data || [];
+    
+    const bookingsRes = await window.CoolKitAPI.api(`/clubs/${clubId}/bookings`);
+    const bookings = bookingsRes.data || [];
+    
+    const isAdmin = window._currentUserRole === 'owner' || window._currentUserRole === 'admin';
+    
+    const createResBtn = document.getElementById('btn-create-resource');
+    if (createResBtn) createResBtn.style.display = isAdmin ? 'block' : 'none';
+    
+    renderResources(resources, bookings, isAdmin);
+    
+    if (isAdmin) {
+      document.getElementById('admin-bookings-section').style.display = 'block';
+      renderAdminBookings(bookings);
+    } else {
+      document.getElementById('admin-bookings-section').style.display = 'none';
+    }
+  } catch (err) {
+    console.error('Failed to load resources:', err);
+  }
+}
+
+function renderResources(resources, bookings, isAdmin) {
+  const container = document.getElementById('resources-list');
+  container.innerHTML = '';
+  
+  if (resources.length === 0) {
+    container.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: var(--spacing-4);">No resources/assets registered for this club.</p>';
+    return;
+  }
+  
+  resources.forEach(r => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.style.marginBottom = 'var(--spacing-4)';
+    card.style.padding = 'var(--spacing-4)';
+    
+    const resBookings = bookings.filter(b => b.resource_id === r.id);
+    let bookingsHtml = '';
+    
+    if (resBookings.length > 0) {
+      bookingsHtml = `
+        <div style="margin-top: var(--spacing-4); border-top: 1px solid var(--border-color); padding-top: var(--spacing-3);">
+          <strong style="font-size: var(--text-sm); color: var(--text-secondary);">Bookings Schedule:</strong>
+          <div style="margin-top: var(--spacing-2); display: flex; flex-direction: column; gap: var(--spacing-2);">
+            ${resBookings.map(b => {
+              const start = new Date(b.start_time).toLocaleString();
+              const end = new Date(b.end_time).toLocaleString();
+              const statusClass = b.status === 'approved' ? 'badge-success' : b.status === 'rejected' ? 'badge-danger' : 'badge-secondary';
+              const user = b.booked_by?.name || 'Someone';
+              const isCurrentUserBooker = b.booked_by_id === window.CoolKitAPI.getUser()?.id;
+              
+              const cancelBtn = (isCurrentUserBooker || isAdmin) ? `<button class="btn btn-ghost btn-sm" style="color: var(--accent-rose); font-size: 11px; padding: 2px 6px;" onclick="cancelBooking('${b.id}')">Cancel</button>` : '';
+
+              return `
+                <div style="display: flex; justify-content: space-between; align-items: center; background-color: var(--bg-muted); padding: var(--spacing-2) var(--spacing-3); border-radius: var(--radius-md); font-size: var(--text-sm);">
+                  <div>
+                    <strong>${user}</strong>: ${start} - ${end}
+                    <div style="color: var(--text-muted); font-size: var(--text-xs); margin-top: 2px;">Purpose: ${b.purpose}</div>
+                  </div>
+                  <div style="display: flex; align-items: center; gap: var(--spacing-2);">
+                    <span class="badge ${statusClass}">${b.status}</span>
+                    ${cancelBtn}
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      `;
+    } else {
+      bookingsHtml = `
+        <div style="margin-top: var(--spacing-4); border-top: 1px solid var(--border-color); padding-top: var(--spacing-3); color: var(--text-muted); font-size: var(--text-sm);">
+          No bookings scheduled yet.
+        </div>
+      `;
+    }
+
+    card.innerHTML = `
+      <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+        <div>
+          <h4 style="margin: 0 0 var(--spacing-1) 0; font-size: var(--text-lg);">${r.name}</h4>
+          <p style="margin: 0 0 var(--spacing-2) 0; color: var(--text-secondary);">${r.description || 'No description provided.'}</p>
+          <span class="badge badge-secondary">Qty Available: ${r.quantity}</span>
+        </div>
+        <div style="display: flex; gap: var(--spacing-2);">
+          <button class="btn btn-primary btn-sm" onclick="openBookModal('${r.id}', '${r.name}')">Book</button>
+          ${isAdmin ? `<button class="btn btn-ghost btn-sm" style="color: var(--accent-rose);" onclick="deleteResource('${r.id}')">Delete</button>` : ''}
+        </div>
+      </div>
+      ${bookingsHtml}
+    `;
+    container.appendChild(card);
+  });
+}
+
+function renderAdminBookings(bookings) {
+  const tbody = document.getElementById('admin-bookings-list');
+  tbody.innerHTML = '';
+  
+  const pendingBookings = bookings.filter(b => b.status === 'pending');
+  
+  if (pendingBookings.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: var(--spacing-4);">No pending booking requests.</td></tr>`;
+    return;
+  }
+  
+  pendingBookings.forEach(b => {
+    const tr = document.createElement('tr');
+    tr.style.borderBottom = '1px solid var(--border-color)';
+    tr.style.fontSize = 'var(--text-sm)';
+    
+    const start = new Date(b.start_time).toLocaleString();
+    const end = new Date(b.end_time).toLocaleString();
+    const resName = b.resource?.name || 'Unknown';
+    const user = b.booked_by?.name || 'Unknown';
+
+    tr.innerHTML = `
+      <td style="padding: var(--spacing-3);"><strong>${resName}</strong></td>
+      <td style="padding: var(--spacing-3);">${user}</td>
+      <td style="padding: var(--spacing-3);">${start} - ${end}</td>
+      <td style="padding: var(--spacing-3); color: var(--text-secondary);">${b.purpose}</td>
+      <td style="padding: var(--spacing-3);"><span class="badge badge-secondary">${b.status}</span></td>
+      <td style="padding: var(--spacing-3); text-align: right;">
+        <button class="btn btn-primary btn-sm" style="margin-right: 4px; padding: 4px 8px; font-size: 11px;" onclick="approveBooking('${b.id}')">Approve</button>
+        <button class="btn btn-secondary btn-sm" style="padding: 4px 8px; font-size: 11px;" onclick="rejectBooking('${b.id}')">Reject</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function setupResourceForm(clubId) {
+  const form = document.getElementById('create-resource-form');
+  if (!form) return;
+  
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name = document.getElementById('resource-name').value;
+    const desc = document.getElementById('resource-desc').value;
+    const qty = parseInt(document.getElementById('resource-qty').value, 10);
+    
+    try {
+      await window.CoolKitAPI.api(`/clubs/${clubId}/resources`, {
+        method: 'POST',
+        body: JSON.stringify({ name, description: desc, quantity: qty })
+      });
+      document.getElementById('create-resource-modal').classList.remove('active');
+      form.reset();
+      loadResources(clubId);
+    } catch (err) {
+      alert('Failed to add resource: ' + (err.message || 'Unknown error'));
+    }
+  });
+}
+
+function setupBookResourceForm(clubId) {
+  const form = document.getElementById('book-resource-form');
+  if (!form) return;
+  
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const resId = document.getElementById('book-resource-id').value;
+    const start = document.getElementById('book-start-time').value;
+    const end = document.getElementById('book-end-time').value;
+    const purpose = document.getElementById('book-purpose').value;
+    const errorDiv = document.getElementById('booking-error');
+    
+    try {
+      errorDiv.style.display = 'none';
+      await window.CoolKitAPI.api(`/resources/${resId}/bookings`, {
+        method: 'POST',
+        body: JSON.stringify({
+          club_id: clubId,
+          start_time: new Date(start).toISOString(),
+          end_time: new Date(end).toISOString(),
+          purpose
+        })
+      });
+      document.getElementById('book-resource-modal').classList.remove('active');
+      form.reset();
+      loadResources(clubId);
+    } catch (err) {
+      errorDiv.textContent = err.message || 'Failed to submit booking request.';
+      errorDiv.style.display = 'block';
+    }
+  });
+}
+
+function openBookModal(resId, resName) {
+  document.getElementById('book-resource-id').value = resId;
+  document.getElementById('book-resource-name-display').value = resName;
+  document.getElementById('booking-error').style.display = 'none';
+  
+  // Set default start/end times
+  const now = new Date();
+  now.setMinutes(now.getMinutes() - now.getTimezoneOffset() + 30); // 30 mins from now
+  const startStr = now.toISOString().slice(0, 16);
+  now.setHours(now.getHours() + 1); // 1 hour duration
+  const endStr = now.toISOString().slice(0, 16);
+  
+  document.getElementById('book-start-time').value = startStr;
+  document.getElementById('book-end-time').value = endStr;
+  
+  document.getElementById('book-resource-modal').classList.add('active');
+}
+
+async function deleteResource(resId) {
+  if (!confirm('Are you sure you want to delete this resource? All associated bookings will be lost.')) return;
+  try {
+    await window.CoolKitAPI.api(`/resources/${resId}`, { method: 'DELETE' });
+    loadResources(window._clubId);
+  } catch (err) {
+    alert('Failed to delete resource.');
+  }
+}
+
+async function approveBooking(bookingId) {
+  try {
+    await window.CoolKitAPI.api(`/bookings/${bookingId}/approve`, { method: 'POST' });
+    loadResources(window._clubId);
+  } catch (err) {
+    alert('Failed to approve booking: ' + (err.message || ''));
+  }
+}
+
+async function rejectBooking(bookingId) {
+  try {
+    await window.CoolKitAPI.api(`/bookings/${bookingId}/reject`, { method: 'POST' });
+    loadResources(window._clubId);
+  } catch (err) {
+    alert('Failed to reject booking: ' + (err.message || ''));
+  }
+}
+
+async function cancelBooking(bookingId) {
+  if (!confirm('Cancel this booking request?')) return;
+  try {
+    await window.CoolKitAPI.api(`/bookings/${bookingId}`, { method: 'DELETE' });
+    loadResources(window._clubId);
+  } catch (err) {
+    alert('Failed to cancel booking.');
+  }
+}
+
+// ─── Analytics ──────────────────────────────
+async function loadAnalytics(clubId) {
+  try {
+    const res = await window.CoolKitAPI.api(`/clubs/${clubId}/analytics`);
+    const analytics = res.data;
+    
+    const finalMemberCount = analytics.member_growth && analytics.member_growth.length > 0 
+      ? analytics.member_growth[analytics.member_growth.length - 1].count 
+      : 0;
+    
+    document.getElementById('analytics-total-members').textContent = finalMemberCount;
+    document.getElementById('analytics-total-events').textContent = analytics.event_stats.total_events;
+    
+    const taskRate = analytics.task_stats.total > 0 
+      ? Math.round((analytics.task_stats.done / analytics.task_stats.total) * 100) 
+      : 0;
+    document.getElementById('analytics-task-rate').textContent = `${taskRate}%`;
+    
+    const balance = analytics.finance_stats.balance || 0;
+    document.getElementById('analytics-balance').textContent = `₹${balance.toLocaleString()}`;
+    document.getElementById('analytics-balance').style.color = balance >= 0 ? 'var(--accent-green)' : 'var(--accent-rose)';
+
+    renderMemberGrowthChart(analytics.member_growth || []);
+    renderTaskChart(analytics.task_stats);
+    renderFinanceChart(analytics.finance_stats);
+  } catch (err) {
+    console.error('Failed to load analytics:', err);
+  }
+}
+
+function renderMemberGrowthChart(data) {
+  const svg = document.getElementById('member-growth-chart');
+  svg.innerHTML = '';
+  if (data.length === 0) {
+    svg.innerHTML = `<text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="var(--text-muted)">No member growth data available</text>`;
+    return;
+  }
+  
+  const width = svg.clientWidth || 350;
+  const height = svg.clientHeight || 200;
+  const padding = 35;
+  
+  const maxVal = Math.max(...data.map(d => d.count), 5);
+  
+  const points = data.map((d, index) => {
+    const x = padding + (index / Math.max(data.length - 1, 1)) * (width - 2 * padding);
+    const y = height - padding - (d.count / maxVal) * (height - 2 * padding);
+    return { x, y, month: d.month, count: d.count };
+  });
+  
+  let pathD = '';
+  points.forEach((p, idx) => {
+    if (idx === 0) pathD += `M ${p.x} ${p.y}`;
+    else pathD += ` L ${p.x} ${p.y}`;
+  });
+
+  let areaD = pathD + ` L ${points[points.length-1].x} ${height - padding} L ${points[0].x} ${height - padding} Z`;
+  
+  svg.innerHTML = `
+    <defs>
+      <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="var(--accent-blue)" stop-opacity="0.35"/>
+        <stop offset="100%" stop-color="var(--accent-blue)" stop-opacity="0.0"/>
+      </linearGradient>
+      <linearGradient id="lineGrad" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0%" stop-color="var(--accent-blue)"/>
+        <stop offset="100%" stop-color="var(--accent-purple)"/>
+      </linearGradient>
+    </defs>
+    
+    <path d="${areaD}" fill="url(#chartGrad)"></path>
+    <path d="${pathD}" fill="none" stroke="url(#lineGrad)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path>
+    
+    ${points.map((p) => `
+      <circle cx="${p.x}" cy="${p.y}" r="4" fill="var(--bg-card)" stroke="var(--accent-blue)" stroke-width="2"></circle>
+      <text x="${p.x}" y="${p.y - 10}" font-size="10" font-weight="600" text-anchor="middle" fill="white">${p.count}</text>
+      <text x="${p.x}" y="${height - 10}" font-size="9" text-anchor="middle" fill="var(--text-secondary)">${p.month}</text>
+    `).join('')}
+  `;
+}
+
+function renderTaskChart(stats) {
+  const svg = document.getElementById('task-chart');
+  svg.innerHTML = '';
+  const total = stats.total || 0;
+  if (total === 0) {
+    svg.innerHTML = `<text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="var(--text-muted)">No tasks created yet</text>`;
+    return;
+  }
+  
+  const width = svg.clientWidth || 350;
+  const height = svg.clientHeight || 200;
+  const cx = width / 2 - 40;
+  const cy = height / 2;
+  const r = 50;
+  
+  const data = [
+    { label: 'Todo', value: stats.todo, color: 'var(--text-secondary)' },
+    { label: 'In Progress', value: stats.in_progress, color: 'var(--accent-amber)' },
+    { label: 'Completed', value: stats.done, color: 'var(--accent-green)' }
+  ].filter(d => d.value > 0);
+  
+  let currentAngle = 0;
+  let paths = [];
+  
+  data.forEach(d => {
+    const percent = d.value / total;
+    const angle = percent * 360;
+    
+    const radStart = (currentAngle - 90) * Math.PI / 180;
+    const radEnd = (currentAngle + angle - 90) * Math.PI / 180;
+    
+    const x1 = cx + r * Math.cos(radStart);
+    const y1 = cy + r * Math.sin(radStart);
+    const x2 = cx + r * Math.cos(radEnd);
+    const y2 = cy + r * Math.sin(radEnd);
+    
+    const largeArcFlag = angle > 180 ? 1 : 0;
+    const pathD = `M ${x1} ${y1} A ${r} ${r} 0 ${largeArcFlag} 1 ${x2} ${y2}`;
+    
+    paths.push({
+      d: pathD,
+      color: d.color,
+      label: d.label,
+      value: d.value,
+      percent: Math.round(percent * 100)
+    });
+    
+    currentAngle += angle;
+  });
+  
+  svg.innerHTML = `
+    ${paths.map(p => `
+      <path d="${p.d}" fill="none" stroke="${p.color}" stroke-width="14" stroke-linecap="round"></path>
+    `).join('')}
+    
+    ${paths.map((p, idx) => `
+      <g transform="translate(${width - 105}, ${40 + idx * 28})">
+        <circle cx="0" cy="0" r="5" fill="${p.color}"></circle>
+        <text x="12" y="4" font-size="11" fill="white" font-weight="600">${p.label}</text>
+        <text x="12" y="16" font-size="10" fill="var(--text-secondary)">${p.value} (${p.percent}%)</text>
+      </g>
+    `).join('')}
+    
+    <text x="${cx}" y="${cy - 2}" text-anchor="middle" font-size="16" font-weight="700" fill="white">${total}</text>
+    <text x="${cx}" y="${cy + 12}" text-anchor="middle" font-size="9" fill="var(--text-secondary)">TASKS</text>
+  `;
+}
+
+function renderFinanceChart(stats) {
+  const svg = document.getElementById('finance-chart');
+  svg.innerHTML = '';
+  
+  const categories = stats.categories || [];
+  if (categories.length === 0) {
+    svg.innerHTML = `<text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="var(--text-muted)">No finance data available</text>`;
+    return;
+  }
+  
+  const width = svg.clientWidth || 350;
+  const height = svg.clientHeight || 200;
+  
+  categories.sort((a, b) => b.Amount - a.Amount);
+  
+  const maxVal = Math.max(...categories.map(c => c.Amount), 1);
+  const barHeight = 12;
+  const gap = 15;
+  const paddingLeft = 85;
+  const paddingRight = 60;
+  const paddingTop = 25;
+  
+  svg.innerHTML = categories.map((cat, idx) => {
+    const y = paddingTop + idx * (barHeight + gap);
+    const barWidth = ((width - paddingLeft - paddingRight) * (cat.Amount / maxVal));
+    const isIncome = cat.Type === 'income';
+    const color = isIncome ? 'var(--accent-green)' : 'var(--accent-rose)';
+    const categoryName = cat.Category.length > 11 ? cat.Category.substring(0, 9) + '..' : cat.Category;
+
+    return `
+      <text x="${paddingLeft - 10}" y="${y + barHeight - 1}" font-size="11" text-anchor="end" font-weight="500" fill="var(--text-secondary)">${categoryName}</text>
+      <rect x="${paddingLeft}" y="${y}" width="${width - paddingLeft - paddingRight}" height="${barHeight}" fill="var(--bg-muted)" rx="6"></rect>
+      <rect x="${paddingLeft}" y="${y}" width="${Math.max(barWidth, 6)}" height="${barHeight}" fill="${color}" rx="6"></rect>
+      <text x="${paddingLeft + barWidth + 8}" y="${y + barHeight - 1}" font-size="11" font-weight="600" fill="${color}">₹${cat.Amount.toLocaleString()}</text>
+    `;
+  }).join('');
 }

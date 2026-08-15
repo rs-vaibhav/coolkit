@@ -17,6 +17,8 @@ func Setup(
 	announcementHandler *handler.AnnouncementHandler,
 	taskHandler *handler.TaskHandler,
 	financeHandler *handler.FinanceHandler,
+	bookingHandler *handler.BookingHandler,
+	analyticsHandler *handler.AnalyticsHandler,
 	jwtSecret string,
 ) *gin.Engine {
 	r := gin.Default()
@@ -82,6 +84,19 @@ func Setup(
 			protected.POST("/events/:id/finance", financeHandler.Create)
 			protected.GET("/events/:id/finance", financeHandler.List)
 			protected.DELETE("/finance/:id", financeHandler.Delete)
+
+			// Resource Booking
+			protected.POST("/clubs/:id/resources", bookingHandler.AddResource)
+			protected.GET("/clubs/:id/resources", bookingHandler.ListResources)
+			protected.DELETE("/resources/:resource_id", bookingHandler.DeleteResource)
+			protected.POST("/resources/:resource_id/bookings", bookingHandler.BookResource)
+			protected.GET("/clubs/:id/bookings", bookingHandler.ListBookings)
+			protected.POST("/bookings/:booking_id/approve", bookingHandler.ApproveBooking)
+			protected.POST("/bookings/:booking_id/reject", bookingHandler.RejectBooking)
+			protected.DELETE("/bookings/:booking_id", bookingHandler.CancelBooking)
+
+			// Analytics
+			protected.GET("/clubs/:id/analytics", analyticsHandler.GetClubAnalytics)
 		}
 	}
 
