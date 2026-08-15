@@ -40,16 +40,16 @@ func Load() {
 		viper.SetDefault("DB_SSLMODE", "disable")
 		viper.SetDefault("JWT_SECRET", "change-me-in-production")
 
-		viper.BindEnv("PORT")
-		viper.BindEnv("GIN_MODE")
-		viper.BindEnv("DATABASE_URL")
-		viper.BindEnv("DB_HOST")
-		viper.BindEnv("DB_PORT")
-		viper.BindEnv("DB_USER")
-		viper.BindEnv("DB_PASSWORD")
-		viper.BindEnv("DB_NAME")
-		viper.BindEnv("DB_SSLMODE")
-		viper.BindEnv("JWT_SECRET")
+		_ = viper.BindEnv("PORT")
+		_ = viper.BindEnv("GIN_MODE")
+		_ = viper.BindEnv("DATABASE_URL")
+		_ = viper.BindEnv("DB_HOST")
+		_ = viper.BindEnv("DB_PORT")
+		_ = viper.BindEnv("DB_USER")
+		_ = viper.BindEnv("DB_PASSWORD")
+		_ = viper.BindEnv("DB_NAME")
+		_ = viper.BindEnv("DB_SSLMODE")
+		_ = viper.BindEnv("JWT_SECRET")
 
 		_ = viper.ReadInConfig() // Ignore file not found error
 
