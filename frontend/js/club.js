@@ -369,7 +369,10 @@ function createMemberCard(member, isAdmin) {
   
   let adminBtn = '';
   if (isAdmin && member.role !== 'owner') {
-    adminBtn = `<button class="btn btn-ghost btn-sm" style="font-size: 11px; padding: 2px 8px; margin-top: 4px;" onclick="event.stopPropagation(); openAssignModal('${member.user.id}', '${user.name}', '${member.domain_id || ''}', '${member.hierarchy_level_id || ''}')">Assign ✏️</button>`;
+    adminBtn = `
+      <button class="btn btn-ghost btn-sm" style="font-size: 11px; padding: 2px 8px; margin-top: 4px;" onclick="event.stopPropagation(); openAssignModal('${member.user.id}', '${user.name}', '${member.domain_id || ''}', '${member.hierarchy_level_id || ''}')">Assign ✏️</button>
+      <button class="btn btn-ghost btn-sm" style="font-size: 11px; padding: 2px 8px; margin-top: 4px; color: var(--accent-rose);" onclick="event.stopPropagation(); removeMember('${member.user.id}', '${user.name}')">Remove 🗑️</button>
+    `;
   }
   
   card.innerHTML = `
@@ -875,6 +878,17 @@ async function deleteAnnouncement(id) {
     loadAnnouncements(_clubId);
   } catch (err) {
     alert('Failed to delete: ' + (err.message || 'Unknown error'));
+  }
+}
+
+// ─── Member Management ──────────────────────
+async function removeMember(userId, name) {
+  if (!confirm(`Are you sure you want to remove ${name} from the club?`)) return;
+  try {
+    await window.CoolKitAPI.api(`/clubs/${_clubId}/members/${userId}`, { method: 'DELETE' });
+    loadOrganizationTree(); // Reload members list
+  } catch (err) {
+    alert('Failed to remove member: ' + (err.message || 'Unknown error'));
   }
 }
 
