@@ -120,8 +120,29 @@ Client Request
 | POST | `/api/v1/clubs` | 🔒 | Create a new club |
 | GET | `/api/v1/clubs` | 🔒 | List user's clubs |
 | GET | `/api/v1/clubs/:id` | 🔒 | Get club details |
-| POST | `/api/v1/clubs/:id/join` | 🔒 | Join a club |
+| POST | `/api/v1/clubs/join` | 🔒 | Join a club using a join code |
 | GET | `/api/v1/clubs/:id/members`| 🔒 | List members of a club |
+| PUT | `/api/v1/clubs/:id/members/:user_id/role`| 🔒 | Update member role |
+| DELETE | `/api/v1/clubs/:id/members/:user_id`| 🔒 | Remove a member |
+| DELETE | `/api/v1/clubs/:id/members/me`| 🔒 | Leave a club |
+| POST | `/api/v1/clubs/:id/announcements` | 🔒 | Post an announcement |
+| GET | `/api/v1/clubs/:id/announcements` | 🔒 | List announcements |
+| DELETE | `/api/v1/announcements/:id` | 🔒 | Delete an announcement |
+| POST | `/api/v1/clubs/:id/events` | 🔒 | Create an event |
+| GET | `/api/v1/clubs/:id/events` | 🔒 | List events |
+| GET | `/api/v1/events/:id` | 🔒 | Get event details |
+| PUT | `/api/v1/events/:id` | 🔒 | Update an event |
+| DELETE | `/api/v1/events/:id` | 🔒 | Delete an event |
+| POST | `/api/v1/events/:id/roles` | 🔒 | Assign an event role |
+| GET | `/api/v1/events/:id/roles` | 🔒 | List event roles |
+| DELETE | `/api/v1/events/:id/roles/:role_id`| 🔒 | Remove an event role |
+| POST | `/api/v1/events/:id/tasks` | 🔒 | Create a task |
+| GET | `/api/v1/events/:id/tasks` | 🔒 | List tasks |
+| PATCH | `/api/v1/tasks/:id/status` | 🔒 | Update task status |
+| DELETE | `/api/v1/tasks/:id` | 🔒 | Delete a task |
+| POST | `/api/v1/events/:id/finance` | 🔒 | Log finance entry |
+| GET | `/api/v1/events/:id/finance` | 🔒 | Get finance summary |
+| DELETE | `/api/v1/finance/:id` | 🔒 | Delete finance entry |
 
 *For full details, see the [API Reference](docs/api.md).*
 
@@ -158,21 +179,21 @@ Look out for issues labeled [`good first issue`](https://github.com/coolkit-org/
 
 ## 🗺 Roadmap
 
-### Phase 1: Foundation (Current)
+### Phase 1: Foundation (Completed)
 - [x] Project setup and architecture
 - [x] User authentication (JWT)
 - [x] Basic club management
 - [x] API Documentation
 
-### Phase 2: Engagement
-- [ ] Event scheduling and management
-- [ ] RSVP system
-- [ ] Announcements and notifications
-- [ ] Member roles and permissions
+### Phase 2: Engagement (Completed)
+- [x] Event scheduling and management
+- [x] RSVP system (via Join Codes and Join Requests)
+- [x] Announcements and notifications
+- [x] Member roles and permissions (Admin/Coordinator/Member)
 
-### Phase 3: Operations
-- [ ] Finance tracking (dues, expenses)
-- [ ] Task management
+### Phase 3: Operations (Completed)
+- [x] Finance tracking (dues, expenses)
+- [x] Task management
 - [ ] Resource booking
 - [ ] Analytics dashboard
 
