@@ -196,7 +196,7 @@ function renderDomainView(container, domainId) {
   
   if (levels.length === 0) {
     // No hierarchy defined — show all domain members flat
-    const section = createSection('👥', domain.name, domainMembers.length);
+    const section = createSection('', domain.name, domainMembers.length);
     const grid = document.createElement('div');
     grid.className = 'org-members-grid';
     domainMembers.forEach(m => grid.appendChild(createMemberCard(m, isAdmin)));
@@ -209,33 +209,26 @@ function renderDomainView(container, domainId) {
   const topLevel = levels[0]; // sorted by position ASC
   const topMembers = domainMembers.filter(m => m.hierarchy_level_id === topLevel.id);
   
-  if (topMembers.length > 0) {
-    const section = createSection('🏆', topLevel.name, topMembers.length);
-    const grid = document.createElement('div');
-    grid.className = 'org-members-grid';
-    topMembers.forEach(m => grid.appendChild(createMemberCard(m, isAdmin)));
-    section.appendChild(grid);
-    container.appendChild(section);
-  }
+  const section = createSection('', topLevel.name, topMembers.length);
+  const grid = document.createElement('div');
+  grid.className = 'org-members-grid';
   
-  // Show clickable cards for remaining levels
+  topMembers.forEach(m => grid.appendChild(createMemberCard(m, isAdmin)));
+  
+  // Show clickable cards for remaining levels in the same grid
   const remainingLevels = levels.slice(1);
-  if (remainingLevels.length > 0) {
-    const levelsGrid = document.createElement('div');
-    levelsGrid.className = 'org-levels-grid';
-    
-    remainingLevels.forEach(level => {
-      const levelMembers = domainMembers.filter(m => m.hierarchy_level_id === level.id);
-      levelsGrid.appendChild(createLevelCard(level, levelMembers.length, domainId));
-    });
-    
-    container.appendChild(levelsGrid);
-  }
+  remainingLevels.forEach(level => {
+    const levelMembers = domainMembers.filter(m => m.hierarchy_level_id === level.id);
+    grid.appendChild(createLevelCard(level, levelMembers.length, domainId));
+  });
+  
+  section.appendChild(grid);
+  container.appendChild(section);
   
   // Members with no hierarchy level in this domain
   const noLevel = domainMembers.filter(m => !m.hierarchy_level_id);
   if (noLevel.length > 0) {
-    const section = createSection('👤', 'No Level Assigned', noLevel.length);
+    const section = createSection('', 'No Level Assigned', noLevel.length);
     section.style.marginTop = 'var(--spacing-6)';
     const grid = document.createElement('div');
     grid.className = 'org-members-grid';
@@ -254,38 +247,28 @@ function renderLevelView(container, domainId, levelPosition) {
   
   const domainMembers = _orgData.members.filter(m => m.domain_id === domainId && m.role !== 'owner' && m.role !== 'admin');
   const levelMembers = domainMembers.filter(m => m.hierarchy_level_id === currentLevel.id);
-  
-  // Show members at this level
-  if (levelMembers.length > 0) {
-    const section = createSection('🏅', currentLevel.name, levelMembers.length);
-    const grid = document.createElement('div');
-    grid.className = 'org-members-grid';
-    levelMembers.forEach(m => grid.appendChild(createMemberCard(m, isAdmin)));
-    section.appendChild(grid);
-    container.appendChild(section);
-  } else {
-    const empty = document.createElement('p');
-    empty.style.cssText = 'color: var(--text-muted); text-align: center; padding: var(--spacing-4);';
-    empty.textContent = `No members at ${currentLevel.name} level yet.`;
-    container.appendChild(empty);
-  }
-  
-  // Show deeper levels as clickable cards
   const deeperLevels = levels.filter(l => l.position > levelPosition);
-  if (deeperLevels.length > 0) {
-    const levelsSection = document.createElement('div');
-    levelsSection.style.marginTop = 'var(--spacing-6)';
-    const levelsGrid = document.createElement('div');
-    levelsGrid.className = 'org-levels-grid';
-    
-    deeperLevels.forEach(level => {
-      const lm = domainMembers.filter(m => m.hierarchy_level_id === level.id);
-      levelsGrid.appendChild(createLevelCard(level, lm.length, domainId));
-    });
-    
-    levelsSection.appendChild(levelsGrid);
-    container.appendChild(levelsSection);
+  
+  const section = createSection('', currentLevel.name, levelMembers.length);
+  const grid = document.createElement('div');
+  grid.className = 'org-members-grid';
+  
+  levelMembers.forEach(m => grid.appendChild(createMemberCard(m, isAdmin)));
+  
+  deeperLevels.forEach(level => {
+    const lm = domainMembers.filter(m => m.hierarchy_level_id === level.id);
+    grid.appendChild(createLevelCard(level, lm.length, domainId));
+  });
+  
+  if (levelMembers.length === 0 && deeperLevels.length === 0) {
+    const empty = document.createElement('p');
+    empty.style.cssText = 'color: var(--text-muted); text-align: center; padding: var(--spacing-4); width: 100%;';
+    empty.textContent = `No members or sub-levels.`;
+    grid.appendChild(empty);
   }
+  
+  section.appendChild(grid);
+  container.appendChild(section);
 }
 
 // ─── Navigation ─────────────────────────────
