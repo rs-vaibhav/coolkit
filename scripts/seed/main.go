@@ -27,9 +27,12 @@ func main() {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
 
+	// Enable uuid-ossp extension
+	db.Exec(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`)
+
 	// 3. Auto Migrate (ensure tables exist)
 	fmt.Println("📦 Running auto-migrations...")
-	err = db.AutoMigrate(&model.User{}, &model.Club{}, &model.ClubMember{})
+	err = db.AutoMigrate(&model.User{}, &model.Club{}, &model.ClubMember{}, &model.Event{}, &model.EventRole{}, &model.Announcement{}, &model.Task{}, &model.FinanceEntry{}, &model.JoinRequest{}, &model.Resource{}, &model.Booking{})
 	if err != nil {
 		log.Fatalf("Failed to auto-migrate: %v", err)
 	}
@@ -92,12 +95,14 @@ func seedData(db *gorm.DB) {
 			ID:          uuid.New(),
 			Name:        "Tech Innovators",
 			Description: "A club for technology enthusiasts",
+			JoinCode:    "TECH1234",
 			OwnerID:     users[0].ID, // Alice
 		},
 		{
 			ID:          uuid.New(),
 			Name:        "Design Studio",
 			Description: "Creative design and UI/UX club",
+			JoinCode:    "DSGN1234",
 			OwnerID:     users[1].ID, // Bob
 		},
 	}
