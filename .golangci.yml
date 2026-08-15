@@ -13,5 +13,3 @@ linters:
 issues:
   exclude-use-default: true
 
-linters-settings:
-  # reasonable defaults
