@@ -7,7 +7,18 @@ import (
 	"github.com/coolkit-org/coolkit/internal/middleware"
 )
 
-func Setup(healthHandler *handler.HealthHandler, authHandler *handler.AuthHandler, clubHandler *handler.ClubHandler, eventHandler *handler.EventHandler, eventRoleHandler *handler.EventRoleHandler, jwtSecret string) *gin.Engine {
+func Setup(
+	healthHandler *handler.HealthHandler,
+	authHandler *handler.AuthHandler,
+	clubHandler *handler.ClubHandler,
+	memberHandler *handler.MemberHandler,
+	eventHandler *handler.EventHandler,
+	eventRoleHandler *handler.EventRoleHandler,
+	announcementHandler *handler.AnnouncementHandler,
+	taskHandler *handler.TaskHandler,
+	financeHandler *handler.FinanceHandler,
+	jwtSecret string,
+) *gin.Engine {
 	r := gin.Default()
 
 	r.Use(middleware.CORS())
@@ -22,17 +33,50 @@ func Setup(healthHandler *handler.HealthHandler, authHandler *handler.AuthHandle
 		protected := v1.Group("")
 		protected.Use(middleware.Auth(jwtSecret))
 		{
+			// Auth
 			protected.GET("/auth/me", authHandler.Me)
+
+			// Clubs
 			protected.POST("/clubs", clubHandler.Create)
 			protected.GET("/clubs", clubHandler.List)
 			protected.GET("/clubs/:id", clubHandler.Get)
 			protected.POST("/clubs/:id/join", clubHandler.Join)
 			protected.GET("/clubs/:id/members", clubHandler.Members)
+
+			// Member Management
+			protected.PUT("/clubs/:id/members/:user_id/role", memberHandler.UpdateRole)
+			protected.DELETE("/clubs/:id/members/:user_id", memberHandler.Remove)
+			protected.DELETE("/clubs/:id/members/me", memberHandler.Leave)
+
+			// Announcements
+			protected.POST("/clubs/:id/announcements", announcementHandler.Create)
+			protected.GET("/clubs/:id/announcements", announcementHandler.List)
+			protected.DELETE("/announcements/:id", announcementHandler.Delete)
+
+			// Events (under clubs)
 			protected.POST("/clubs/:id/events", eventHandler.Create)
 			protected.GET("/clubs/:id/events", eventHandler.List)
+
+			// Events (standalone)
 			protected.GET("/events/:id", eventRoleHandler.GetEventDetails)
+			protected.PUT("/events/:id", eventHandler.Update)
+			protected.DELETE("/events/:id", eventHandler.Delete)
+
+			// Event Roles
 			protected.GET("/events/:id/roles", eventRoleHandler.GetRoles)
 			protected.POST("/events/:id/roles", eventRoleHandler.AssignRole)
+			protected.DELETE("/events/:id/roles/:role_id", eventRoleHandler.RemoveRole)
+
+			// Tasks (per event)
+			protected.POST("/events/:id/tasks", taskHandler.Create)
+			protected.GET("/events/:id/tasks", taskHandler.List)
+			protected.PATCH("/tasks/:id/status", taskHandler.UpdateStatus)
+			protected.DELETE("/tasks/:id", taskHandler.Delete)
+
+			// Finance (per event)
+			protected.POST("/events/:id/finance", financeHandler.Create)
+			protected.GET("/events/:id/finance", financeHandler.List)
+			protected.DELETE("/finance/:id", financeHandler.Delete)
 		}
 	}
 

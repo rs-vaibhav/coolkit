@@ -57,3 +57,14 @@ func (r *ClubRepository) IsMember(clubID, userID uuid.UUID) (bool, error) {
 	}
 	return count > 0, nil
 }
+
+func (r *ClubRepository) UpdateMemberRole(clubID, userID uuid.UUID, role string) error {
+	return r.db.Model(&model.ClubMember{}).
+		Where("club_id = ? AND user_id = ?", clubID, userID).
+		Update("role", role).Error
+}
+
+func (r *ClubRepository) DeleteMember(clubID, userID uuid.UUID) error {
+	return r.db.Where("club_id = ? AND user_id = ?", clubID, userID).
+		Delete(&model.ClubMember{}).Error
+}

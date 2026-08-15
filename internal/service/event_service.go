@@ -132,3 +132,72 @@ func (s *EventService) AssignEventRole(eventID, assignerID, assignedUserID uuid.
 
 	return role, nil
 }
+
+func (s *EventService) UpdateEvent(eventID, userID uuid.UUID, title, description string, date time.Time, location string) (*model.Event, error) {
+	event, err := s.eventRepo.FindByID(eventID)
+	if err != nil {
+		return nil, ErrEventNotFound
+	}
+
+	// Verify user is owner/admin of the club
+	if !s.isClubAdmin(event.ClubID, userID) {
+		return nil, ErrUnauthorized
+	}
+
+	event.Title = title
+	event.Description = description
+	event.Date = date
+	event.Location = location
+
+	err = s.eventRepo.Update(event)
+	if err != nil {
+		return nil, err
+	}
+
+	return event, nil
+}
+
+func (s *EventService) DeleteEvent(eventID, userID uuid.UUID) error {
+	event, err := s.eventRepo.FindByID(eventID)
+	if err != nil {
+		return ErrEventNotFound
+	}
+
+	if !s.isClubAdmin(event.ClubID, userID) {
+		return ErrUnauthorized
+	}
+
+	return s.eventRepo.Delete(eventID)
+}
+
+func (s *EventService) RemoveEventRole(roleID, userID uuid.UUID) error {
+	role, err := s.eventRoleRepo.FindByID(roleID)
+	if err != nil {
+		return errors.New("role not found")
+	}
+
+	event, err := s.eventRepo.FindByID(role.EventID)
+	if err != nil {
+		return ErrEventNotFound
+	}
+
+	if !s.isClubAdmin(event.ClubID, userID) {
+		return ErrUnauthorized
+	}
+
+	return s.eventRoleRepo.Delete(roleID)
+}
+
+// isClubAdmin checks if a user is an owner or admin of the given club
+func (s *EventService) isClubAdmin(clubID, userID uuid.UUID) bool {
+	members, err := s.clubRepo.FindMembers(clubID)
+	if err != nil {
+		return false
+	}
+	for _, m := range members {
+		if m.UserID == userID && (m.Role == model.RoleOwner || m.Role == model.RoleAdmin) {
+			return true
+		}
+	}
+	return false
+}

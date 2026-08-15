@@ -33,7 +33,7 @@ func main() {
 	db.Exec(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`)
 
 	// Auto-migrate models
-	err = db.AutoMigrate(&model.User{}, &model.Club{}, &model.ClubMember{}, &model.Event{}, &model.EventRole{})
+	err = db.AutoMigrate(&model.User{}, &model.Club{}, &model.ClubMember{}, &model.Event{}, &model.EventRole{}, &model.Announcement{}, &model.Task{}, &model.FinanceEntry{})
 	if err != nil {
 		log.Fatalf("Failed to auto-migrate models: %v", err)
 	}
@@ -44,6 +44,9 @@ func main() {
 	clubRepo := repository.NewClubRepository(db)
 	eventRepo := repository.NewEventRepository(db)
 	eventRoleRepo := repository.NewEventRoleRepository(db)
+	announcementRepo := repository.NewAnnouncementRepository(db)
+	taskRepo := repository.NewTaskRepository(db)
+	financeRepo := repository.NewFinanceRepository(db)
 
 	// Initialize services
 	authService := service.NewAuthService(userRepo, cfg.JWTSecret)
@@ -54,11 +57,15 @@ func main() {
 	healthHandler := handler.NewHealthHandler(db)
 	authHandler := handler.NewAuthHandler(authService)
 	clubHandler := handler.NewClubHandler(clubService)
+	memberHandler := handler.NewMemberHandler(clubService)
 	eventHandler := handler.NewEventHandler(eventService)
 	eventRoleHandler := handler.NewEventRoleHandler(eventService)
+	announcementHandler := handler.NewAnnouncementHandler(announcementRepo, clubRepo)
+	taskHandler := handler.NewTaskHandler(taskRepo, eventRepo, clubRepo)
+	financeHandler := handler.NewFinanceHandler(financeRepo, eventRepo, clubRepo)
 
 	// Set up router
-	r := router.Setup(healthHandler, authHandler, clubHandler, eventHandler, eventRoleHandler, cfg.JWTSecret)
+	r := router.Setup(healthHandler, authHandler, clubHandler, memberHandler, eventHandler, eventRoleHandler, announcementHandler, taskHandler, financeHandler, cfg.JWTSecret)
 
 	srv := &http.Server{
 		Addr:    ":" + cfg.Port,

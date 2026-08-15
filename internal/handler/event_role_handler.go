@@ -84,3 +84,30 @@ func (h *EventRoleHandler) AssignRole(c *gin.Context) {
 
 	response.Created(c, role)
 }
+
+func (h *EventRoleHandler) RemoveRole(c *gin.Context) {
+	roleID, err := uuid.Parse(c.Param("role_id"))
+	if err != nil {
+		response.BadRequest(c, "Invalid role ID")
+		return
+	}
+
+	userIDVal, exists := c.Get("user_id")
+	if !exists {
+		response.Unauthorized(c, "Unauthorized")
+		return
+	}
+	userID := userIDVal.(uuid.UUID)
+
+	err = h.eventService.RemoveEventRole(roleID, userID)
+	if err != nil {
+		if err == service.ErrUnauthorized {
+			response.Unauthorized(c, err.Error())
+			return
+		}
+		response.InternalError(c, err.Error())
+		return
+	}
+
+	response.OK(c, gin.H{"message": "Role removed successfully"})
+}

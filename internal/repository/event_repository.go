@@ -33,6 +33,10 @@ func (r *EventRepository) FindByID(id uuid.UUID) (*model.Event, error) {
 	return &event, nil
 }
 
+func (r *EventRepository) Update(event *model.Event) error {
+	return r.db.Save(event).Error
+}
+
 func (r *EventRepository) Delete(id uuid.UUID) error {
 	return r.db.Delete(&model.Event{}, id).Error
 }

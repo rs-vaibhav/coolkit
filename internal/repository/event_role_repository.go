@@ -34,6 +34,15 @@ func (r *EventRoleRepository) FindByEventAndUser(eventID, userID uuid.UUID) (*mo
 	return &role, nil
 }
 
+func (r *EventRoleRepository) FindByID(id uuid.UUID) (*model.EventRole, error) {
+	var role model.EventRole
+	err := r.db.First(&role, id).Error
+	if err != nil {
+		return nil, err
+	}
+	return &role, nil
+}
+
 func (r *EventRoleRepository) Delete(id uuid.UUID) error {
 	return r.db.Delete(&model.EventRole{}, id).Error
 }

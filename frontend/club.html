@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Club — CoolKit</title>
   
-  <link rel="stylesheet" href="css/base.css?v=6">
-  <link rel="stylesheet" href="css/components.css?v=6">
-  <link rel="stylesheet" href="css/club.css?v=6">
+  <link rel="stylesheet" href="css/base.css?v=7">
+  <link rel="stylesheet" href="css/components.css?v=7">
+  <link rel="stylesheet" href="css/club.css?v=7">
 </head>
 <body>
 
@@ -29,7 +29,10 @@
   <main class="club-workspace">
     
     <div class="club-header">
-      <a href="/dashboard" class="btn btn-ghost btn-sm" style="margin-bottom: var(--spacing-4); margin-left: -12px;">← Back to Dashboard</a>
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <a href="/dashboard" class="btn btn-ghost btn-sm" style="margin-bottom: var(--spacing-4); margin-left: -12px;">← Back to Dashboard</a>
+        <button class="btn btn-ghost btn-sm" id="btn-leave-club" style="display: none; color: var(--accent-rose);" onclick="leaveClub()">Leave Club</button>
+      </div>
       
       <div class="club-header-top">
         <h1 class="club-title" id="club-name">Loading...</h1>
@@ -63,9 +66,13 @@
         </div>
       </div>
       
-      <div class="card">
-        <h3>Recent Activity</h3>
-        <p style="color: var(--text-muted); margin-top: var(--spacing-4);">No recent activity.</p>
+      <!-- Announcements Feed -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-4);">
+        <h3 style="margin: 0;">Announcements</h3>
+        <button class="btn btn-primary btn-sm" id="btn-create-announcement" style="display: none;" onclick="document.getElementById('create-announcement-modal').classList.add('active')">Post Announcement</button>
+      </div>
+      <div id="announcements-feed">
+        <p style="color: var(--text-muted); text-align: center; padding: var(--spacing-4);">Loading announcements...</p>
       </div>
     </div>
 
@@ -92,7 +99,7 @@
     <div class="modal">
       <div class="modal-header">
         <h3>Create Event</h3>
-        <button class="btn-close" onclick="document.getElementById('create-event-modal').classList.remove('active')">&times;</button>
+        <button class="btn-icon btn-ghost" onclick="document.getElementById('create-event-modal').classList.remove('active')">&times;</button>
       </div>
       <div class="modal-body">
         <form id="create-event-form">
@@ -119,8 +126,39 @@
     </div>
   </div>
 
-  <script src="js/api.js?v=4"></script>
-  <script src="js/auth.js?v=4"></script>
-  <script src="js/club.js?v=4"></script>
+  <!-- Create Announcement Modal -->
+  <div id="create-announcement-modal" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Post Announcement</h3>
+        <button class="btn-icon btn-ghost" onclick="document.getElementById('create-announcement-modal').classList.remove('active')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="create-announcement-form">
+          <div class="form-group">
+            <label class="form-label">Title</label>
+            <input type="text" id="announcement-title" class="form-input" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Content</label>
+            <textarea id="announcement-content" class="form-input" rows="4" required></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Priority</label>
+            <select id="announcement-priority" class="form-input">
+              <option value="normal">Normal</option>
+              <option value="important">Important</option>
+              <option value="urgent">Urgent</option>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary" style="width: 100%;">Post Announcement</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/api.js?v=7"></script>
+  <script src="js/auth.js?v=7"></script>
+  <script src="js/club.js?v=7"></script>
 </body>
 </html>
