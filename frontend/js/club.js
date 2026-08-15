@@ -156,9 +156,7 @@ function renderRootView(container) {
     grid.className = 'org-domains-grid';
     
     _orgData.domains.forEach(domain => {
-      const domainMembers = _orgData.members.filter(m => 
-        m.domain_id === domain.id && m.role !== 'owner' && m.role !== 'admin'
-      );
+      const domainMembers = _orgData.members.filter(m => m.domain_id === domain.id);
       grid.appendChild(createDomainCard(domain, domainMembers.length));
     });
     
@@ -191,7 +189,7 @@ function renderDomainView(container, domainId) {
   const domain = _orgData.domains.find(d => d.id === domainId);
   if (!domain) { navigateTo('root'); return; }
   
-  const domainMembers = _orgData.members.filter(m => m.domain_id === domainId && m.role !== 'owner' && m.role !== 'admin');
+  const domainMembers = _orgData.members.filter(m => m.domain_id === domainId);
   const levels = _orgData.hierarchy_levels;
   
   if (levels.length === 0) {
@@ -245,7 +243,7 @@ function renderLevelView(container, domainId, levelPosition) {
   const currentLevel = levels.find(l => l.position === levelPosition);
   if (!currentLevel) { navigateTo('domain', domainId); return; }
   
-  const domainMembers = _orgData.members.filter(m => m.domain_id === domainId && m.role !== 'owner' && m.role !== 'admin');
+  const domainMembers = _orgData.members.filter(m => m.domain_id === domainId);
   const levelMembers = domainMembers.filter(m => m.hierarchy_level_id === currentLevel.id);
   const deeperLevels = levels.filter(l => l.position > levelPosition);
   
