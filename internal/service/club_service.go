@@ -27,11 +27,18 @@ func NewClubService(clubRepo *repository.ClubRepository, joinRequestRepo *reposi
 	}
 }
 
-func (s *ClubService) CreateClub(name, description string, ownerID uuid.UUID) (*model.Club, error) {
+func (s *ClubService) CreateClub(name, description, joinCode string, ownerID uuid.UUID) (*model.Club, error) {
+	// Check if joinCode is unique
+	existingClub, _ := s.clubRepo.FindByJoinCode(joinCode)
+	if existingClub != nil {
+		return nil, errors.New("join code already exists, please choose another one")
+	}
+
 	club := &model.Club{
 		ID:          uuid.New(),
 		Name:        name,
 		Description: description,
+		JoinCode:    joinCode,
 		OwnerID:     ownerID,
 	}
 
@@ -66,8 +73,13 @@ func (s *ClubService) GetClub(clubID uuid.UUID) (*model.Club, error) {
 	return club, nil
 }
 
-func (s *ClubService) JoinClub(clubID, userID uuid.UUID) error {
-	isMember, err := s.clubRepo.IsMember(clubID, userID)
+func (s *ClubService) JoinClub(joinCode string, userID uuid.UUID) error {
+	club, err := s.clubRepo.FindByJoinCode(joinCode)
+	if err != nil {
+		return errors.New("invalid join code")
+	}
+
+	isMember, err := s.clubRepo.IsMember(club.ID, userID)
 	if err != nil {
 		return err
 	}
@@ -76,14 +88,14 @@ func (s *ClubService) JoinClub(clubID, userID uuid.UUID) error {
 	}
 
 	// Check if already pending
-	existingReq, err := s.joinRequestRepo.FindPendingByUserAndClub(userID, clubID)
+	existingReq, err := s.joinRequestRepo.FindPendingByUserAndClub(userID, club.ID)
 	if err == nil && existingReq != nil {
 		return errors.New("you already have a pending join request for this club")
 	}
 
 	req := &model.JoinRequest{
 		ID:     uuid.New(),
-		ClubID: clubID,
+		ClubID: club.ID,
 		UserID: userID,
 		Status: model.JoinRequestStatusPending,
 	}

@@ -71,6 +71,11 @@
             <input type="text" class="form-input" id="create-name" required placeholder="e.g. FOSS Club">
           </div>
           <div class="form-group">
+            <label class="form-label">Join Code</label>
+            <input type="text" class="form-input" id="create-code" required placeholder="e.g. FOSS@123">
+            <p style="color: var(--text-muted); font-size: var(--text-sm); margin-top: var(--spacing-2);">A unique code for members to join this club.</p>
+          </div>
+          <div class="form-group">
             <label class="form-label">Description</label>
             <textarea class="form-input" id="create-desc" placeholder="What is your club about?"></textarea>
           </div>
@@ -94,9 +99,9 @@
         <div id="join-error" class="alert alert-error" style="display: none;"></div>
         <form id="join-club-form">
           <div class="form-group">
-            <label class="form-label">Club ID</label>
-            <input type="text" class="form-input" id="join-id" required placeholder="Enter club ID">
-            <p style="color: var(--text-muted); font-size: var(--text-sm); margin-top: var(--spacing-2);">Ask a club administrator for the Club ID</p>
+            <label class="form-label">Join Code</label>
+            <input type="text" class="form-input" id="join-code" required placeholder="Enter Join Code">
+            <p style="color: var(--text-muted); font-size: var(--text-sm); margin-top: var(--spacing-2);">Ask a club administrator for the Join Code</p>
           </div>
           <div class="modal-footer" style="margin-top: var(--spacing-6);">
             <button type="button" class="btn btn-ghost" onclick="this.closest('.modal-overlay').classList.remove('active')">Cancel</button>

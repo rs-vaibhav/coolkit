@@ -27,6 +27,15 @@ func (r *ClubRepository) FindByID(id uuid.UUID) (*model.Club, error) {
 	return &club, nil
 }
 
+func (r *ClubRepository) FindByJoinCode(code string) (*model.Club, error) {
+	var club model.Club
+	err := r.db.Preload("Owner").Where("join_code = ?", code).First(&club).Error
+	if err != nil {
+		return nil, err
+	}
+	return &club, nil
+}
+
 func (r *ClubRepository) FindByUserID(userID uuid.UUID) ([]model.Club, error) {
 	var clubs []model.Club
 	// Join through club_members to find all clubs a user belongs to

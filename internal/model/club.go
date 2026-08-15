@@ -11,6 +11,7 @@ type Club struct {
 	ID          uuid.UUID      `gorm:"type:uuid;primary_key;default:uuid_generate_v4()" json:"id"`
 	Name        string         `gorm:"not null" json:"name"`
 	Description string         `json:"description"`
+	JoinCode    string         `gorm:"type:varchar(50);uniqueIndex;not null" json:"join_code"`
 	OwnerID     uuid.UUID      `gorm:"type:uuid;not null;index" json:"owner_id"`
 	Owner       User           `gorm:"foreignKey:OwnerID" json:"owner,omitempty"`
 	Members     []ClubMember   `gorm:"foreignKey:ClubID" json:"members,omitempty"`

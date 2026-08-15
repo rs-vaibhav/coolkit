@@ -32,6 +32,14 @@ func main() {
 	// Enable uuid-ossp extension for UUID generation
 	db.Exec(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`)
 
+	// Pre-migration for JoinCode to avoid NOT NULL constraint errors
+	var count int64
+	db.Raw("SELECT count(*) FROM information_schema.columns WHERE table_name='clubs' AND column_name='join_code'").Scan(&count)
+	if count == 0 {
+		db.Exec("ALTER TABLE clubs ADD COLUMN join_code VARCHAR(50)")
+		db.Exec("UPDATE clubs SET join_code = substr(md5(random()::text), 0, 9)")
+	}
+
 	// Auto-migrate models
 	err = db.AutoMigrate(&model.User{}, &model.Club{}, &model.ClubMember{}, &model.Event{}, &model.EventRole{}, &model.Announcement{}, &model.Task{}, &model.FinanceEntry{}, &model.JoinRequest{})
 	if err != nil {

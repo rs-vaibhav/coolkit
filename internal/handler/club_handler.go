@@ -21,6 +21,7 @@ func NewClubHandler(clubService *service.ClubService) *ClubHandler {
 type CreateClubRequest struct {
 	Name        string `json:"name" binding:"required"`
 	Description string `json:"description"`
+	JoinCode    string `json:"join_code" binding:"required,min=4,max=50"`
 }
 
 func (h *ClubHandler) Create(c *gin.Context) {
@@ -38,7 +39,7 @@ func (h *ClubHandler) Create(c *gin.Context) {
 
 	userID := userIDVal.(uuid.UUID)
 
-	club, err := h.clubService.CreateClub(req.Name, req.Description, userID)
+	club, err := h.clubService.CreateClub(req.Name, req.Description, req.JoinCode, userID)
 	if err != nil {
 		response.InternalError(c, err.Error())
 		return
@@ -86,11 +87,14 @@ func (h *ClubHandler) Get(c *gin.Context) {
 	response.OK(c, club)
 }
 
+type JoinClubRequest struct {
+	JoinCode string `json:"join_code" binding:"required"`
+}
+
 func (h *ClubHandler) Join(c *gin.Context) {
-	idStr := c.Param("id")
-	clubID, err := uuid.Parse(idStr)
-	if err != nil {
-		response.BadRequest(c, "Invalid club ID")
+	var req JoinClubRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, err.Error())
 		return
 	}
 
@@ -102,7 +106,7 @@ func (h *ClubHandler) Join(c *gin.Context) {
 
 	userID := userIDVal.(uuid.UUID)
 
-	err = h.clubService.JoinClub(clubID, userID)
+	err := h.clubService.JoinClub(req.JoinCode, userID)
 	if err != nil {
 		if errors.Is(err, service.ErrAlreadyMember) || err.Error() == "you already have a pending join request for this club" {
 			response.Error(c, 409, err.Error())

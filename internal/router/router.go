@@ -40,7 +40,7 @@ func Setup(
 			protected.POST("/clubs", clubHandler.Create)
 			protected.GET("/clubs", clubHandler.List)
 			protected.GET("/clubs/:id", clubHandler.Get)
-			protected.POST("/clubs/:id/join", clubHandler.Join)
+			protected.POST("/clubs/join", clubHandler.Join)
 			protected.GET("/clubs/:id/members", clubHandler.Members)
 			
 			// Join Requests

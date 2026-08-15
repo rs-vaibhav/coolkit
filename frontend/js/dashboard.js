@@ -18,11 +18,12 @@ document.addEventListener('DOMContentLoaded', () => {
       e.preventDefault();
       const name = document.getElementById('create-name').value;
       const desc = document.getElementById('create-desc').value;
+      const joinCode = document.getElementById('create-code').value;
       const errorDiv = document.getElementById('create-error');
       
       try {
         errorDiv.style.display = 'none';
-        await api('/clubs', { method: 'POST', body: JSON.stringify({ name, description: desc }) });
+        await api('/clubs', { method: 'POST', body: JSON.stringify({ name, description: desc, join_code: joinCode }) });
         
         document.getElementById('create-modal').classList.remove('active');
         createForm.reset();
@@ -39,12 +40,15 @@ document.addEventListener('DOMContentLoaded', () => {
   if (joinForm) {
     joinForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const clubId = document.getElementById('join-id').value;
+      const joinCode = document.getElementById('join-code').value;
       const errorDiv = document.getElementById('join-error');
       
       try {
         errorDiv.style.display = 'none';
-        const res = await api(`/clubs/${clubId}/join`, { method: 'POST' });
+        const res = await api(`/clubs/join`, { 
+          method: 'POST',
+          body: JSON.stringify({ join_code: joinCode })
+        });
         alert(res.message || "Join request sent! You will be added once approved.");
         
         document.getElementById('join-modal').classList.remove('active');
@@ -100,8 +104,9 @@ function renderClubs(clubs) {
         </div>
       </div>
       <div class="club-card-description">${club.description || 'No description provided.'}</div>
-      <div class="club-card-footer">
+      <div class="club-card-footer" style="display: flex; justify-content: space-between;">
         <span>Est. ${date}</span>
+        ${role === 'owner' ? `<span style="color: var(--text-muted); font-size: var(--text-sm);">Code: <strong>${club.join_code}</strong></span>` : ''}
       </div>
     `;
     grid.appendChild(card);
