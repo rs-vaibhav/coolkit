@@ -83,6 +83,7 @@
         <button class="btn btn-secondary btn-sm" onclick="document.getElementById('hierarchy-modal').classList.add('active'); loadHierarchyEditor()">Manage Hierarchy</button>
         <button class="btn btn-secondary btn-sm" onclick="document.getElementById('domain-modal').classList.add('active')">Manage Domains</button>
         <button class="btn btn-secondary btn-sm" onclick="document.getElementById('leadership-modal').classList.add('active'); loadLeadershipEditor()">Manage Leadership</button>
+        <button class="btn btn-secondary btn-sm" onclick="document.getElementById('settings-modal').classList.add('active'); loadClubSettings()">Club Settings</button>
       </div>
 
       <!-- Breadcrumb navigation -->
@@ -268,9 +269,38 @@
     </div>
   </div>
 
-  <script src="js/api.js?v=9"></script>
-  <script src="js/auth.js?v=9"></script>
-  <script src="js/club.js?v=9"></script>
+  <!-- Club Settings Modal -->
+  <div id="settings-modal" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Club Settings</h3>
+        <button class="btn-icon btn-ghost" onclick="document.getElementById('settings-modal').classList.remove('active')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="color: var(--text-muted); margin-bottom: var(--spacing-4);">Customize the names of the core roles in your club (e.g. rename Admin to Chairperson).</p>
+        <div class="form-group">
+          <label class="form-label">Owner Label</label>
+          <input type="text" id="settings-owner" class="form-input" placeholder="e.g. President, Founder" value="Owner">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Admin Label</label>
+          <input type="text" id="settings-admin" class="form-input" placeholder="e.g. Chairperson, Vice President" value="Admin">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Leadership Section Title</label>
+          <input type="text" id="settings-leadership" class="form-input" placeholder="e.g. Core Team, Board of Directors" value="Leadership">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-sm" onclick="document.getElementById('settings-modal').classList.remove('active')">Cancel</button>
+        <button class="btn btn-primary btn-sm" onclick="saveClubSettings()">Save Settings</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/api.js?v=10"></script>
+  <script src="js/auth.js?v=10"></script>
+  <script src="js/club.js?v=10"></script>
 </body>
 </html>
 

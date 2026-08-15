@@ -246,3 +246,42 @@ func (h *ClubHandler) RejectJoinRequest(c *gin.Context) {
 
 	response.OK(c, gin.H{"message": "Join request rejected successfully"})
 }
+type UpdateSettingsRequest struct {
+	OwnerLabel      string `json:"owner_label"`
+	AdminLabel      string `json:"admin_label"`
+	LeadershipLabel string `json:"leadership_label"`
+}
+
+func (h *ClubHandler) UpdateSettings(c *gin.Context) {
+	clubIDStr := c.Param("id")
+	clubID, err := uuid.Parse(clubIDStr)
+	if err != nil {
+		response.BadRequest(c, "Invalid club ID")
+		return
+	}
+
+	userIDVal, exists := c.Get("user_id")
+	if !exists {
+		response.Unauthorized(c, "User ID not found in context")
+		return
+	}
+	userID := userIDVal.(uuid.UUID)
+
+	var req UpdateSettingsRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, err.Error())
+		return
+	}
+
+	err = h.clubService.UpdateSettings(clubID, userID, req.OwnerLabel, req.AdminLabel, req.LeadershipLabel)
+	if err != nil {
+		if err == service.ErrNotAuthorized {
+			response.Unauthorized(c, err.Error())
+			return
+		}
+		response.InternalError(c, err.Error())
+		return
+	}
+
+	response.OK(c, gin.H{"message": "Club settings updated successfully"})
+}

@@ -46,6 +46,9 @@ func TestPhase3Integration(t *testing.T) {
 			description TEXT,
 			join_code TEXT UNIQUE NOT NULL,
 			owner_id TEXT NOT NULL,
+			owner_label TEXT DEFAULT 'Owner',
+			admin_label TEXT DEFAULT 'Admin',
+			leadership_label TEXT DEFAULT 'Leadership',
 			created_at DATETIME,
 			updated_at DATETIME,
 			deleted_at DATETIME

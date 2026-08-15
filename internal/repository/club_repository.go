@@ -86,3 +86,10 @@ func (r *ClubRepository) DeleteMember(clubID, userID uuid.UUID) error {
 	return r.db.Where("club_id = ? AND user_id = ?", clubID, userID).
 		Delete(&model.ClubMember{}).Error
 }
+func (r *ClubRepository) UpdateSettings(clubID uuid.UUID, ownerLabel, adminLabel, leadershipLabel string) error {
+	return r.db.Model(&model.Club{}).Where("id = ?", clubID).Updates(map[string]interface{}{
+		"owner_label":      ownerLabel,
+		"admin_label":      adminLabel,
+		"leadership_label": leadershipLabel,
+	}).Error
+}

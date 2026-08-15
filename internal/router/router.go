@@ -41,6 +41,7 @@ func Setup(
 			protected.POST("/clubs", clubHandler.Create)
 			protected.GET("/clubs", clubHandler.List)
 			protected.GET("/clubs/:id", clubHandler.Get)
+			protected.PUT("/clubs/:id/settings", clubHandler.UpdateSettings)
 			protected.POST("/clubs/join", clubHandler.Join)
 			protected.GET("/clubs/:id/members", clubHandler.Members)
 			

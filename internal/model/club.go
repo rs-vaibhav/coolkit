@@ -15,9 +15,12 @@ type Club struct {
 	OwnerID     uuid.UUID      `gorm:"type:uuid;not null;index" json:"owner_id"`
 	Owner       User           `gorm:"foreignKey:OwnerID" json:"owner,omitempty"`
 	Members     []ClubMember   `gorm:"foreignKey:ClubID" json:"members,omitempty"`
-	CreatedAt   time.Time      `json:"created_at"`
-	UpdatedAt   time.Time      `json:"updated_at"`
-	DeletedAt   gorm.DeletedAt `gorm:"index" json:"-"`
+	OwnerLabel      string         `gorm:"type:varchar(50);default:'Owner'" json:"owner_label"`
+	AdminLabel      string         `gorm:"type:varchar(50);default:'Admin'" json:"admin_label"`
+	LeadershipLabel string         `gorm:"type:varchar(50);default:'Leadership'" json:"leadership_label"`
+	CreatedAt       time.Time      `json:"created_at"`
+	UpdatedAt       time.Time      `json:"updated_at"`
+	DeletedAt       gorm.DeletedAt `gorm:"index" json:"-"`
 }
 
 func (Club) TableName() string {

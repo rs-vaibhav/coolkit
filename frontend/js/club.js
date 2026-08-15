@@ -141,7 +141,7 @@ function renderRootView(container) {
   // 1. Leadership section (owners + admins)
   const leaders = _orgData.members.filter(m => m.role === 'owner' || m.role === 'admin');
   if (leaders.length > 0) {
-    const section = createSection('👑', 'Leadership', leaders.length);
+    const section = createSection('', _orgData.club?.leadership_label || 'Leadership', leaders.length);
     const grid = document.createElement('div');
     grid.className = 'org-members-grid';
     leaders.forEach(m => grid.appendChild(createMemberCard(m, isAdmin)));
@@ -361,8 +361,11 @@ function createMemberCard(member, isAdmin) {
   }
   
   let roleBadge = '';
-  if (member.role === 'owner') roleBadge = '<span class="badge badge-primary">Owner</span>';
-  else if (member.role === 'admin') roleBadge = '<span class="badge badge-warning">Admin</span>';
+  const ownerLabel = _orgData.club?.owner_label || 'Owner';
+  const adminLabel = _orgData.club?.admin_label || 'Admin';
+  
+  if (member.role === 'owner') roleBadge = `<span class="badge badge-success" style="background: rgba(33, 150, 243, 0.1); color: var(--primary-color);">${ownerLabel.toUpperCase()}</span>`;
+  else if (member.role === 'admin') roleBadge = `<span class="badge badge-warning">${adminLabel.toUpperCase()}</span>`;
   
   let adminBtn = '';
   if (isAdmin && member.role !== 'owner') {
@@ -911,7 +914,7 @@ function loadLeadershipEditor() {
     select.style.padding = 'var(--spacing-1) var(--spacing-2)';
     select.innerHTML = `
       <option value="member" ${m.role === 'member' ? 'selected' : ''}>Member</option>
-      <option value="admin" ${m.role === 'admin' ? 'selected' : ''}>Admin</option>
+      <option value="admin" ${m.role === 'admin' ? 'selected' : ''}>${_orgData.club?.admin_label || 'Admin'}</option>
     `;
     
     select.addEventListener('change', async (e) => {
@@ -950,3 +953,36 @@ function setupTabs() {
     });
   });
 }
+
+// ─── Club Settings ──────────────────────
+function loadClubSettings() {
+  document.getElementById('settings-owner').value = _orgData.club?.owner_label || 'Owner';
+  document.getElementById('settings-admin').value = _orgData.club?.admin_label || 'Admin';
+  document.getElementById('settings-leadership').value = _orgData.club?.leadership_label || 'Leadership';
+}
+
+async function saveClubSettings() {
+  const ownerLabel = document.getElementById('settings-owner').value.trim();
+  const adminLabel = document.getElementById('settings-admin').value.trim();
+  const leadershipLabel = document.getElementById('settings-leadership').value.trim();
+  
+  try {
+    await window.CoolKitAPI.api(`/clubs/${_clubId}/settings`, {
+      method: 'PUT',
+      body: JSON.stringify({ owner_label: ownerLabel, admin_label: adminLabel, leadership_label: leadershipLabel })
+    });
+    
+    // Update local state
+    if (_orgData.club) {
+      _orgData.club.owner_label = ownerLabel;
+      _orgData.club.admin_label = adminLabel;
+      _orgData.club.leadership_label = leadershipLabel;
+    }
+    
+    document.getElementById('settings-modal').classList.remove('active');
+    renderOrganizationTree(); // Re-render with new labels
+  } catch (err) {
+    alert('Failed to save settings: ' + (err.message || 'Unknown error'));
+  }
+}
+

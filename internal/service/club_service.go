@@ -303,3 +303,33 @@ func (s *ClubService) LeaveClub(clubID, userID uuid.UUID) error {
 
 	return s.clubRepo.DeleteMember(clubID, userID)
 }
+func (s *ClubService) UpdateSettings(clubID, requesterID uuid.UUID, ownerLabel, adminLabel, leadershipLabel string) error {
+	members, err := s.clubRepo.FindMembers(clubID)
+	if err != nil {
+		return err
+	}
+
+	isOwner := false
+	for _, m := range members {
+		if m.UserID == requesterID && m.Role == model.RoleOwner {
+			isOwner = true
+			break
+		}
+	}
+
+	if !isOwner {
+		return ErrNotAuthorized
+	}
+
+	if ownerLabel == "" {
+		ownerLabel = "Owner"
+	}
+	if adminLabel == "" {
+		adminLabel = "Admin"
+	}
+	if leadershipLabel == "" {
+		leadershipLabel = "Leadership"
+	}
+
+	return s.clubRepo.UpdateSettings(clubID, ownerLabel, adminLabel, leadershipLabel)
+}
