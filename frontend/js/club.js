@@ -354,7 +354,6 @@ function createSection(icon, title, count) {
   const header = document.createElement('div');
   header.className = 'org-section-header';
   header.innerHTML = `
-    <span class="org-section-icon">${icon}</span>
     <span class="org-section-title">${title}</span>
     <span class="org-section-count">(${count})</span>
   `;
