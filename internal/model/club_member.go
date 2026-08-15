@@ -14,13 +14,17 @@ const (
 )
 
 type ClubMember struct {
-	ID       uuid.UUID `gorm:"type:uuid;primary_key;default:uuid_generate_v4()" json:"id"`
-	ClubID   uuid.UUID `gorm:"type:uuid;not null;uniqueIndex:idx_club_user" json:"club_id"`
-	UserID   uuid.UUID `gorm:"type:uuid;not null;uniqueIndex:idx_club_user" json:"user_id"`
-	Role     string    `gorm:"not null;default:'member'" json:"role"`
-	Club     Club      `gorm:"foreignKey:ClubID" json:"club,omitempty"`
-	User     User      `gorm:"foreignKey:UserID" json:"user,omitempty"`
-	JoinedAt time.Time `gorm:"autoCreateTime" json:"joined_at"`
+	ID               uuid.UUID  `gorm:"type:uuid;primary_key;default:uuid_generate_v4()" json:"id"`
+	ClubID           uuid.UUID  `gorm:"type:uuid;not null;uniqueIndex:idx_club_user" json:"club_id"`
+	UserID           uuid.UUID  `gorm:"type:uuid;not null;uniqueIndex:idx_club_user" json:"user_id"`
+	Role             string     `gorm:"not null;default:'member'" json:"role"`
+	DomainID         *uuid.UUID `gorm:"type:uuid;index" json:"domain_id"`
+	HierarchyLevelID *uuid.UUID `gorm:"type:uuid;index" json:"hierarchy_level_id"`
+	Club             Club            `gorm:"foreignKey:ClubID" json:"club,omitempty"`
+	User             User            `gorm:"foreignKey:UserID" json:"user,omitempty"`
+	Domain           *Domain         `gorm:"foreignKey:DomainID" json:"domain,omitempty"`
+	HierarchyLevel   *HierarchyLevel `gorm:"foreignKey:HierarchyLevelID" json:"hierarchy_level,omitempty"`
+	JoinedAt         time.Time  `gorm:"autoCreateTime" json:"joined_at"`
 }
 
 func (ClubMember) TableName() string {

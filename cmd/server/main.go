@@ -41,7 +41,7 @@ func main() {
 	}
 
 	// Auto-migrate models
-	err = db.AutoMigrate(&model.User{}, &model.Club{}, &model.ClubMember{}, &model.Event{}, &model.EventRole{}, &model.Announcement{}, &model.Task{}, &model.FinanceEntry{}, &model.JoinRequest{})
+	err = db.AutoMigrate(&model.User{}, &model.Club{}, &model.ClubMember{}, &model.Event{}, &model.EventRole{}, &model.Announcement{}, &model.Task{}, &model.FinanceEntry{}, &model.JoinRequest{}, &model.HierarchyLevel{}, &model.Domain{})
 	if err != nil {
 		log.Fatalf("Failed to auto-migrate models: %v", err)
 	}
@@ -56,10 +56,12 @@ func main() {
 	taskRepo := repository.NewTaskRepository(db)
 	financeRepo := repository.NewFinanceRepository(db)
 	joinRequestRepo := repository.NewJoinRequestRepository(db)
+	hierarchyRepo := repository.NewHierarchyRepository(db)
+	domainRepo := repository.NewDomainRepository(db)
 
 	// Initialize services
 	authService := service.NewAuthService(userRepo, cfg.JWTSecret)
-	clubService := service.NewClubService(clubRepo, joinRequestRepo)
+	clubService := service.NewClubService(clubRepo, joinRequestRepo, hierarchyRepo)
 	eventService := service.NewEventService(eventRepo, clubRepo, eventRoleRepo)
 
 	// Initialize handlers
@@ -72,9 +74,10 @@ func main() {
 	announcementHandler := handler.NewAnnouncementHandler(announcementRepo, clubRepo)
 	taskHandler := handler.NewTaskHandler(taskRepo, eventRepo, clubRepo)
 	financeHandler := handler.NewFinanceHandler(financeRepo, eventRepo, clubRepo)
+	hierarchyHandler := handler.NewHierarchyHandler(clubRepo, hierarchyRepo, domainRepo)
 
 	// Set up router
-	r := router.Setup(healthHandler, authHandler, clubHandler, memberHandler, eventHandler, eventRoleHandler, announcementHandler, taskHandler, financeHandler, cfg.JWTSecret)
+	r := router.Setup(healthHandler, authHandler, clubHandler, memberHandler, eventHandler, eventRoleHandler, announcementHandler, taskHandler, financeHandler, hierarchyHandler, cfg.JWTSecret)
 
 	srv := &http.Server{
 		Addr:    ":" + cfg.Port,

@@ -18,12 +18,14 @@ var (
 type ClubService struct {
 	clubRepo        *repository.ClubRepository
 	joinRequestRepo *repository.JoinRequestRepository
+	hierarchyRepo   *repository.HierarchyRepository
 }
 
-func NewClubService(clubRepo *repository.ClubRepository, joinRequestRepo *repository.JoinRequestRepository) *ClubService {
+func NewClubService(clubRepo *repository.ClubRepository, joinRequestRepo *repository.JoinRequestRepository, hierarchyRepo *repository.HierarchyRepository) *ClubService {
 	return &ClubService{
 		clubRepo:        clubRepo,
 		joinRequestRepo: joinRequestRepo,
+		hierarchyRepo:   hierarchyRepo,
 	}
 }
 
@@ -73,7 +75,7 @@ func (s *ClubService) GetClub(clubID uuid.UUID) (*model.Club, error) {
 	return club, nil
 }
 
-func (s *ClubService) JoinClub(joinCode string, userID uuid.UUID) error {
+func (s *ClubService) JoinClub(joinCode string, userID uuid.UUID, domainID *uuid.UUID) error {
 	club, err := s.clubRepo.FindByJoinCode(joinCode)
 	if err != nil {
 		return errors.New("invalid join code")
@@ -94,10 +96,11 @@ func (s *ClubService) JoinClub(joinCode string, userID uuid.UUID) error {
 	}
 
 	req := &model.JoinRequest{
-		ID:     uuid.New(),
-		ClubID: club.ID,
-		UserID: userID,
-		Status: model.JoinRequestStatusPending,
+		ID:       uuid.New(),
+		ClubID:   club.ID,
+		UserID:   userID,
+		Status:   model.JoinRequestStatusPending,
+		DomainID: domainID,
 	}
 
 	return s.joinRequestRepo.Create(req)
@@ -155,12 +158,22 @@ func (s *ClubService) ApproveJoinRequest(requestID, adminUserID uuid.UUID) error
 		return err
 	}
 
+	// Find lowest hierarchy level
+	levels, err := s.hierarchyRepo.FindByClubID(req.ClubID)
+	var hierarchyLevelID *uuid.UUID
+	if err == nil && len(levels) > 0 {
+		lowestLevel := levels[len(levels)-1] // Since it's ordered by position ASC, last is lowest
+		hierarchyLevelID = &lowestLevel.ID
+	}
+
 	// Add member
 	member := &model.ClubMember{
-		ID:     uuid.New(),
-		ClubID: req.ClubID,
-		UserID: req.UserID,
-		Role:   model.RoleMember,
+		ID:               uuid.New(),
+		ClubID:           req.ClubID,
+		UserID:           req.UserID,
+		Role:             model.RoleMember,
+		DomainID:         req.DomainID,
+		HierarchyLevelID: hierarchyLevelID,
 	}
 	return s.clubRepo.AddMember(member)
 }

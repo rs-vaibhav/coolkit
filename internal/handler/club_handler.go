@@ -88,7 +88,8 @@ func (h *ClubHandler) Get(c *gin.Context) {
 }
 
 type JoinClubRequest struct {
-	JoinCode string `json:"join_code" binding:"required"`
+	JoinCode string  `json:"join_code" binding:"required"`
+	DomainID *string `json:"domain_id"`
 }
 
 func (h *ClubHandler) Join(c *gin.Context) {
@@ -106,7 +107,15 @@ func (h *ClubHandler) Join(c *gin.Context) {
 
 	userID := userIDVal.(uuid.UUID)
 
-	err := h.clubService.JoinClub(req.JoinCode, userID)
+	var domainID *uuid.UUID
+	if req.DomainID != nil && *req.DomainID != "" {
+		id, err := uuid.Parse(*req.DomainID)
+		if err == nil {
+			domainID = &id
+		}
+	}
+
+	err := h.clubService.JoinClub(req.JoinCode, userID, domainID)
 	if err != nil {
 		if errors.Is(err, service.ErrAlreadyMember) || err.Error() == "you already have a pending join request for this club" {
 			response.Error(c, 409, err.Error())

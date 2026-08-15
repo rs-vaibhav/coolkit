@@ -52,7 +52,7 @@ func (r *ClubRepository) AddMember(member *model.ClubMember) error {
 
 func (r *ClubRepository) FindMembers(clubID uuid.UUID) ([]model.ClubMember, error) {
 	var members []model.ClubMember
-	err := r.db.Where("club_id = ?", clubID).Preload("User").Find(&members).Error
+	err := r.db.Where("club_id = ?", clubID).Preload("User").Preload("Domain").Preload("HierarchyLevel").Find(&members).Error
 	return members, err
 }
 
@@ -71,6 +71,15 @@ func (r *ClubRepository) UpdateMemberRole(clubID, userID uuid.UUID, role string)
 	return r.db.Model(&model.ClubMember{}).
 		Where("club_id = ? AND user_id = ?", clubID, userID).
 		Update("role", role).Error
+}
+
+func (r *ClubRepository) UpdateMemberOrganization(clubID, userID uuid.UUID, domainID, hierarchyLevelID *uuid.UUID) error {
+	return r.db.Model(&model.ClubMember{}).
+		Where("club_id = ? AND user_id = ?", clubID, userID).
+		Updates(map[string]interface{}{
+			"domain_id":          domainID,
+			"hierarchy_level_id": hierarchyLevelID,
+		}).Error
 }
 
 func (r *ClubRepository) DeleteMember(clubID, userID uuid.UUID) error {

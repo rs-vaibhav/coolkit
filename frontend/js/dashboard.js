@@ -42,17 +42,26 @@ document.addEventListener('DOMContentLoaded', () => {
       e.preventDefault();
       const joinCode = document.getElementById('join-code').value;
       const errorDiv = document.getElementById('join-error');
+      const domainSelect = document.getElementById('join-domain-select');
+      const domainId = domainSelect ? domainSelect.value || null : null;
       
       try {
         errorDiv.style.display = 'none';
+        const body = { join_code: joinCode };
+        if (domainId) body.domain_id = domainId;
+        
         const res = await api(`/clubs/join`, { 
           method: 'POST',
-          body: JSON.stringify({ join_code: joinCode })
+          body: JSON.stringify(body)
         });
-        alert(res.message || "Join request sent! You will be added once approved.");
+        alert(res.data?.message || res.message || "Join request sent! You will be added once approved.");
         
         document.getElementById('join-modal').classList.remove('active');
         joinForm.reset();
+        if (domainSelect) {
+          domainSelect.innerHTML = '<option value="">Select domain (optional)</option>';
+          domainSelect.parentElement.style.display = 'none';
+        }
         loadClubs();
       } catch (err) {
         errorDiv.textContent = err.message;

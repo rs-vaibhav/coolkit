@@ -17,6 +17,7 @@ func Setup(
 	announcementHandler *handler.AnnouncementHandler,
 	taskHandler *handler.TaskHandler,
 	financeHandler *handler.FinanceHandler,
+	hierarchyHandler *handler.HierarchyHandler,
 	jwtSecret string,
 ) *gin.Engine {
 	r := gin.Default()
@@ -82,6 +83,16 @@ func Setup(
 			protected.POST("/events/:id/finance", financeHandler.Create)
 			protected.GET("/events/:id/finance", financeHandler.List)
 			protected.DELETE("/finance/:id", financeHandler.Delete)
+
+			// Hierarchy & Domains
+			protected.POST("/clubs/:id/hierarchy", hierarchyHandler.SetHierarchy)
+			protected.GET("/clubs/:id/hierarchy", hierarchyHandler.GetHierarchy)
+			protected.POST("/clubs/:id/domains", hierarchyHandler.CreateDomain)
+			protected.GET("/clubs/:id/domains", hierarchyHandler.ListDomains)
+			protected.PUT("/clubs/:id/domains/:domain_id", hierarchyHandler.UpdateDomain)
+			protected.DELETE("/clubs/:id/domains/:domain_id", hierarchyHandler.DeleteDomain)
+			protected.PUT("/clubs/:id/members/:user_id/organization", hierarchyHandler.AssignMemberOrganization)
+			protected.GET("/clubs/:id/organization", hierarchyHandler.GetOrganizationTree)
 		}
 	}
 

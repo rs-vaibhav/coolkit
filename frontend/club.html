@@ -78,9 +78,17 @@
     </div>
 
     <div id="tab-members" class="tab-content" style="display: none;">
-      <div class="members-list" id="members-list">
-        <!-- Populated by JS -->
+      <!-- Admin toolbar (visible to owner/admin only) -->
+      <div class="org-admin-toolbar" id="org-admin-toolbar" style="display: none;">
+        <button class="btn btn-secondary btn-sm" onclick="document.getElementById('hierarchy-modal').classList.add('active'); loadHierarchyEditor()">⚙️ Manage Hierarchy</button>
+        <button class="btn btn-secondary btn-sm" onclick="document.getElementById('domain-modal').classList.add('active')">📁 Manage Domains</button>
       </div>
+
+      <!-- Breadcrumb navigation -->
+      <div class="org-breadcrumb" id="org-breadcrumb" style="display: none;"></div>
+
+      <!-- Organization tree (populated by JS) -->
+      <div id="org-tree"></div>
     </div>
 
     <div id="tab-requests" class="tab-content" style="display: none;">
@@ -167,8 +175,85 @@
     </div>
   </div>
 
-  <script src="js/api.js?v=7"></script>
-  <script src="js/auth.js?v=7"></script>
-  <script src="js/club.js?v=7"></script>
+  <!-- Hierarchy Editor Modal -->
+  <div id="hierarchy-modal" class="modal-overlay">
+    <div class="modal" style="max-width: 560px;">
+      <div class="modal-header">
+        <h3>Manage Hierarchy</h3>
+        <button class="btn-icon btn-ghost" onclick="document.getElementById('hierarchy-modal').classList.remove('active')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="color: var(--text-secondary); font-size: var(--text-sm); margin-bottom: var(--spacing-4);">Define the hierarchy levels for your club. Position 1 is the highest rank. These levels apply across all domains.</p>
+        <div class="hierarchy-editor" id="hierarchy-editor">
+          <!-- Populated by JS -->
+        </div>
+        <button class="hierarchy-add-btn" id="hierarchy-add-btn" onclick="addHierarchyLevel()" style="margin-top: var(--spacing-3);">+ Add Level</button>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-sm" onclick="document.getElementById('hierarchy-modal').classList.remove('active')">Cancel</button>
+        <button class="btn btn-primary btn-sm" onclick="saveHierarchy()">Save Hierarchy</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Domain Management Modal -->
+  <div id="domain-modal" class="modal-overlay">
+    <div class="modal" style="max-width: 560px;">
+      <div class="modal-header">
+        <h3>Manage Domains</h3>
+        <button class="btn-icon btn-ghost" onclick="document.getElementById('domain-modal').classList.remove('active')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="color: var(--text-secondary); font-size: var(--text-sm); margin-bottom: var(--spacing-4);">Domains are organizational units like "Creative", "Development", "Marketing".</p>
+        <div id="domain-list-editor">
+          <!-- Populated by JS -->
+        </div>
+        <div style="margin-top: var(--spacing-4); border-top: 1px solid var(--border-subtle); padding-top: var(--spacing-4);">
+          <h4 style="margin-bottom: var(--spacing-3);">Add Domain</h4>
+          <div class="form-group">
+            <input type="text" id="new-domain-name" class="form-input" placeholder="Domain name (e.g., Creative)">
+          </div>
+          <div class="form-group">
+            <input type="text" id="new-domain-desc" class="form-input" placeholder="Short description (optional)">
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="createDomain()">Add Domain</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Assign Member Organization Modal -->
+  <div id="assign-modal" class="modal-overlay">
+    <div class="modal" style="max-width: 480px;">
+      <div class="modal-header">
+        <h3>Assign Member</h3>
+        <button class="btn-icon btn-ghost" onclick="document.getElementById('assign-modal').classList.remove('active')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="color: var(--text-secondary); font-size: var(--text-sm); margin-bottom: var(--spacing-4);">Assign <strong id="assign-member-name"></strong> to a domain and hierarchy level.</p>
+        <div class="form-group">
+          <label class="form-label">Domain</label>
+          <select id="assign-domain" class="assign-select">
+            <option value="">No domain (unassigned)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Hierarchy Level</label>
+          <select id="assign-level" class="assign-select">
+            <option value="">No level</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-sm" onclick="document.getElementById('assign-modal').classList.remove('active')">Cancel</button>
+        <button class="btn btn-primary btn-sm" onclick="saveAssignment()">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/api.js?v=8"></script>
+  <script src="js/auth.js?v=8"></script>
+  <script src="js/club.js?v=8"></script>
 </body>
 </html>
+
