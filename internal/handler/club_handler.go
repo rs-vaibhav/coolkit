@@ -112,6 +112,10 @@ func (h *ClubHandler) Join(c *gin.Context) {
 			response.Error(c, 409, err.Error())
 			return
 		}
+		if err.Error() == "invalid join code" {
+			response.BadRequest(c, err.Error())
+			return
+		}
 		response.InternalError(c, err.Error())
 		return
 	}

@@ -63,7 +63,7 @@ async function api(endpoint, options = {}) {
     }
 
     if (!response.ok) {
-      const errorMsg = data && data.message ? data.message : `HTTP Error ${response.status}`;
+      const errorMsg = data && (data.error || data.message) ? (data.error || data.message) : `HTTP Error ${response.status}`;
       throw new Error(errorMsg);
     }
 
