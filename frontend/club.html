@@ -82,6 +82,7 @@
       <div class="org-admin-toolbar" id="org-admin-toolbar" style="display: none;">
         <button class="btn btn-secondary btn-sm" onclick="document.getElementById('hierarchy-modal').classList.add('active'); loadHierarchyEditor()">⚙️ Manage Hierarchy</button>
         <button class="btn btn-secondary btn-sm" onclick="document.getElementById('domain-modal').classList.add('active')">📁 Manage Domains</button>
+        <button class="btn btn-secondary btn-sm" onclick="document.getElementById('leadership-modal').classList.add('active'); loadLeadershipEditor()">👑 Manage Leadership</button>
       </div>
 
       <!-- Breadcrumb navigation -->
@@ -247,6 +248,22 @@
       <div class="modal-footer">
         <button class="btn btn-secondary btn-sm" onclick="document.getElementById('assign-modal').classList.remove('active')">Cancel</button>
         <button class="btn btn-primary btn-sm" onclick="saveAssignment()">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Manage Leadership Modal -->
+  <div id="leadership-modal" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Manage Leadership</h3>
+        <button class="btn-icon btn-ghost" onclick="document.getElementById('leadership-modal').classList.remove('active')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="color: var(--text-muted); margin-bottom: var(--spacing-4);">Assign admin roles to members. Admins can manage club settings, requests, and other members.</p>
+        <div id="leadership-list" style="display: flex; flex-direction: column; gap: var(--spacing-3); max-height: 400px; overflow-y: auto;">
+          <!-- Populated by JS -->
+        </div>
       </div>
     </div>
   </div>

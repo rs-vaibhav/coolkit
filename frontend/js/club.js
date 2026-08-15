@@ -875,6 +875,66 @@ async function deleteAnnouncement(id) {
   }
 }
 
+// ─── Leadership Management ──────────────────────
+function loadLeadershipEditor() {
+  const list = document.getElementById('leadership-list');
+  if (!list) return;
+  list.innerHTML = '';
+  
+  if (!_orgData.members || _orgData.members.length === 0) {
+    list.innerHTML = '<p>No members found.</p>';
+    return;
+  }
+  
+  const sorted = [..._orgData.members].sort((a, b) => {
+    const roleWeight = { 'owner': 3, 'admin': 2, 'coordinator': 1, 'member': 0 };
+    const wA = roleWeight[a.role] || 0;
+    const wB = roleWeight[b.role] || 0;
+    if (wA !== wB) return wB - wA;
+    const nameA = (a.user && a.user.name) ? a.user.name.toLowerCase() : '';
+    const nameB = (b.user && b.user.name) ? b.user.name.toLowerCase() : '';
+    return nameA.localeCompare(nameB);
+  });
+  
+  sorted.forEach(m => {
+    if (m.role === 'owner') return; // Don't allow changing owner role here
+    
+    const div = document.createElement('div');
+    div.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: var(--spacing-3); background: var(--bg-primary); border: 1px solid var(--border-subtle); border-radius: var(--radius-md);';
+    
+    const info = document.createElement('div');
+    info.innerHTML = `<div style="font-weight: 600;">${m.user?.name || 'Unknown'}</div><div style="font-size: var(--text-xs); color: var(--text-muted);">${m.user?.email || ''}</div>`;
+    
+    const select = document.createElement('select');
+    select.className = 'form-input';
+    select.style.width = 'auto';
+    select.style.padding = 'var(--spacing-1) var(--spacing-2)';
+    select.innerHTML = `
+      <option value="member" ${m.role === 'member' ? 'selected' : ''}>Member</option>
+      <option value="admin" ${m.role === 'admin' ? 'selected' : ''}>Admin</option>
+    `;
+    
+    select.addEventListener('change', async (e) => {
+      const newRole = e.target.value;
+      try {
+        await window.CoolKitAPI.api(`/clubs/${_clubId}/members/${m.user_id}/role`, {
+          method: 'PUT',
+          body: JSON.stringify({ role: newRole })
+        });
+        m.role = newRole; 
+        renderOrganizationTree();
+      } catch (err) {
+        alert('Failed to update role: ' + (err.message || 'Unknown error'));
+        e.target.value = m.role; 
+      }
+    });
+    
+    div.appendChild(info);
+    div.appendChild(select);
+    list.appendChild(div);
+  });
+}
+
 // ─── Tabs ──────────────────────────────
 function setupTabs() {
   const tabs = document.querySelectorAll('.tab-btn');
