@@ -55,6 +55,8 @@ func TestPhase3Integration(t *testing.T) {
 			club_id TEXT NOT NULL,
 			user_id TEXT NOT NULL,
 			role TEXT NOT NULL DEFAULT 'member',
+			domain_id TEXT,
+			hierarchy_level_id TEXT,
 			joined_at DATETIME
 		)`,
 		`CREATE TABLE events (
