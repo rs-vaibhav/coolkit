@@ -370,8 +370,8 @@ function createMemberCard(member, isAdmin) {
   let adminBtn = '';
   if (isAdmin && member.role !== 'owner') {
     adminBtn = `
-      <button class="btn btn-ghost btn-sm" style="font-size: 11px; padding: 2px 8px; margin-top: 4px;" onclick="event.stopPropagation(); openAssignModal('${member.user.id}', '${user.name}', '${member.domain_id || ''}', '${member.hierarchy_level_id || ''}')">Assign ✏️</button>
-      <button class="btn btn-ghost btn-sm" style="font-size: 11px; padding: 2px 8px; margin-top: 4px; color: var(--accent-rose);" onclick="event.stopPropagation(); removeMember('${member.user.id}', '${user.name}')">Remove 🗑️</button>
+      <button class="btn btn-ghost btn-sm" style="font-size: 11px; padding: 2px 8px; margin-top: 4px;" onclick="event.stopPropagation(); openAssignModal('${member.user.id}', '${user.name}', '${member.domain_id || ''}', '${member.hierarchy_level_id || ''}')">Assign</button>
+      <button class="btn btn-ghost btn-sm" style="font-size: 11px; padding: 2px 8px; margin-top: 4px; color: var(--accent-rose);" onclick="event.stopPropagation(); removeMember('${member.user.id}', '${user.name}')">Remove</button>
     `;
   }
   
