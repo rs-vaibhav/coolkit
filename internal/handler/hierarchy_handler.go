@@ -427,6 +427,12 @@ func (h *HierarchyHandler) GetOrganizationTree(c *gin.Context) {
 		return
 	}
 
+	club, err := h.clubRepo.FindByID(clubID)
+	if err != nil {
+		response.InternalError(c, err.Error())
+		return
+	}
+
 	members, err := h.clubRepo.FindMembers(clubID)
 	if err != nil {
 		response.InternalError(c, err.Error())
@@ -446,6 +452,7 @@ func (h *HierarchyHandler) GetOrganizationTree(c *gin.Context) {
 	}
 
 	response.OK(c, gin.H{
+		"club":             club,
 		"members":          members,
 		"hierarchy_levels": levels,
 		"domains":          domains,
