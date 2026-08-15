@@ -42,6 +42,11 @@ func Setup(
 			protected.GET("/clubs/:id", clubHandler.Get)
 			protected.POST("/clubs/:id/join", clubHandler.Join)
 			protected.GET("/clubs/:id/members", clubHandler.Members)
+			
+			// Join Requests
+			protected.GET("/clubs/:id/requests", clubHandler.GetJoinRequests)
+			protected.POST("/clubs/:id/requests/:request_id/approve", clubHandler.ApproveJoinRequest)
+			protected.POST("/clubs/:id/requests/:request_id/reject", clubHandler.RejectJoinRequest)
 
 			// Member Management
 			protected.PUT("/clubs/:id/members/:user_id/role", memberHandler.UpdateRole)

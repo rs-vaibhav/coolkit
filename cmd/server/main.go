@@ -33,7 +33,7 @@ func main() {
 	db.Exec(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`)
 
 	// Auto-migrate models
-	err = db.AutoMigrate(&model.User{}, &model.Club{}, &model.ClubMember{}, &model.Event{}, &model.EventRole{}, &model.Announcement{}, &model.Task{}, &model.FinanceEntry{})
+	err = db.AutoMigrate(&model.User{}, &model.Club{}, &model.ClubMember{}, &model.Event{}, &model.EventRole{}, &model.Announcement{}, &model.Task{}, &model.FinanceEntry{}, &model.JoinRequest{})
 	if err != nil {
 		log.Fatalf("Failed to auto-migrate models: %v", err)
 	}
@@ -47,10 +47,11 @@ func main() {
 	announcementRepo := repository.NewAnnouncementRepository(db)
 	taskRepo := repository.NewTaskRepository(db)
 	financeRepo := repository.NewFinanceRepository(db)
+	joinRequestRepo := repository.NewJoinRequestRepository(db)
 
 	// Initialize services
 	authService := service.NewAuthService(userRepo, cfg.JWTSecret)
-	clubService := service.NewClubService(clubRepo)
+	clubService := service.NewClubService(clubRepo, joinRequestRepo)
 	eventService := service.NewEventService(eventRepo, clubRepo, eventRoleRepo)
 
 	// Initialize handlers

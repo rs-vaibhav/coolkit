@@ -44,7 +44,8 @@ document.addEventListener('DOMContentLoaded', () => {
       
       try {
         errorDiv.style.display = 'none';
-        await api(`/clubs/${clubId}/join`, { method: 'POST' });
+        const res = await api(`/clubs/${clubId}/join`, { method: 'POST' });
+        alert(res.message || "Join request sent! You will be added once approved.");
         
         document.getElementById('join-modal').classList.remove('active');
         joinForm.reset();

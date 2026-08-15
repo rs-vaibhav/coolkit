@@ -16,12 +16,14 @@ var (
 )
 
 type ClubService struct {
-	clubRepo *repository.ClubRepository
+	clubRepo        *repository.ClubRepository
+	joinRequestRepo *repository.JoinRequestRepository
 }
 
-func NewClubService(clubRepo *repository.ClubRepository) *ClubService {
+func NewClubService(clubRepo *repository.ClubRepository, joinRequestRepo *repository.JoinRequestRepository) *ClubService {
 	return &ClubService{
-		clubRepo: clubRepo,
+		clubRepo:        clubRepo,
+		joinRequestRepo: joinRequestRepo,
 	}
 }
 
@@ -73,13 +75,111 @@ func (s *ClubService) JoinClub(clubID, userID uuid.UUID) error {
 		return ErrAlreadyMember
 	}
 
-	member := &model.ClubMember{
+	// Check if already pending
+	existingReq, err := s.joinRequestRepo.FindPendingByUserAndClub(userID, clubID)
+	if err == nil && existingReq != nil {
+		return errors.New("you already have a pending join request for this club")
+	}
+
+	req := &model.JoinRequest{
 		ID:     uuid.New(),
 		ClubID: clubID,
 		UserID: userID,
+		Status: model.JoinRequestStatusPending,
+	}
+
+	return s.joinRequestRepo.Create(req)
+}
+
+func (s *ClubService) GetPendingJoinRequests(clubID, userID uuid.UUID) ([]model.JoinRequest, error) {
+	// Verify user is owner/admin
+	members, err := s.clubRepo.FindMembers(clubID)
+	if err != nil {
+		return nil, err
+	}
+	isAdmin := false
+	for _, m := range members {
+		if m.UserID == userID && (m.Role == model.RoleOwner || m.Role == model.RoleAdmin) {
+			isAdmin = true
+			break
+		}
+	}
+	if !isAdmin {
+		return nil, ErrNotAuthorized
+	}
+
+	return s.joinRequestRepo.FindPendingByClubID(clubID)
+}
+
+func (s *ClubService) ApproveJoinRequest(requestID, adminUserID uuid.UUID) error {
+	req, err := s.joinRequestRepo.FindByID(requestID)
+	if err != nil {
+		return errors.New("join request not found")
+	}
+
+	// Verify admin
+	members, err := s.clubRepo.FindMembers(req.ClubID)
+	if err != nil {
+		return err
+	}
+	isAdmin := false
+	for _, m := range members {
+		if m.UserID == adminUserID && (m.Role == model.RoleOwner || m.Role == model.RoleAdmin) {
+			isAdmin = true
+			break
+		}
+	}
+	if !isAdmin {
+		return ErrNotAuthorized
+	}
+
+	if req.Status != model.JoinRequestStatusPending {
+		return errors.New("request is not pending")
+	}
+
+	// Approve
+	err = s.joinRequestRepo.UpdateStatus(requestID, model.JoinRequestStatusApproved)
+	if err != nil {
+		return err
+	}
+
+	// Add member
+	member := &model.ClubMember{
+		ID:     uuid.New(),
+		ClubID: req.ClubID,
+		UserID: req.UserID,
 		Role:   model.RoleMember,
 	}
 	return s.clubRepo.AddMember(member)
+}
+
+func (s *ClubService) RejectJoinRequest(requestID, adminUserID uuid.UUID) error {
+	req, err := s.joinRequestRepo.FindByID(requestID)
+	if err != nil {
+		return errors.New("join request not found")
+	}
+
+	// Verify admin
+	members, err := s.clubRepo.FindMembers(req.ClubID)
+	if err != nil {
+		return err
+	}
+	isAdmin := false
+	for _, m := range members {
+		if m.UserID == adminUserID && (m.Role == model.RoleOwner || m.Role == model.RoleAdmin) {
+			isAdmin = true
+			break
+		}
+	}
+	if !isAdmin {
+		return ErrNotAuthorized
+	}
+
+	if req.Status != model.JoinRequestStatusPending {
+		return errors.New("request is not pending")
+	}
+
+	return s.joinRequestRepo.UpdateStatus(requestID, model.JoinRequestStatusRejected)
 }
 
 func (s *ClubService) GetClubMembers(clubID uuid.UUID) ([]model.ClubMember, error) {

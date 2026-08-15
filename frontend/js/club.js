@@ -80,8 +80,75 @@ async function loadMembers(id) {
     document.getElementById('member-count').textContent = `${members.length} Members`;
     document.getElementById('stat-members').textContent = members.length;
     renderMembers(members, isAdmin);
+    
+    // Load requests if admin
+    if (isAdmin) {
+      document.getElementById('tab-btn-requests').style.display = 'inline-block';
+      loadJoinRequests(id);
+    }
   } catch (err) {
     console.error('Failed to load members:', err);
+  }
+}
+
+// ─── Join Requests ──────────────────────────────
+async function loadJoinRequests(id) {
+  try {
+    const res = await window.CoolKitAPI.api(`/clubs/${id}/requests`);
+    renderJoinRequests(res.data || []);
+  } catch (err) {
+    console.error('Failed to load requests:', err);
+  }
+}
+
+function renderJoinRequests(requests) {
+  const list = document.getElementById('requests-list');
+  list.innerHTML = '';
+  
+  if (requests.length === 0) {
+    list.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: var(--spacing-4);">No pending requests.</p>';
+    return;
+  }
+  
+  requests.forEach(req => {
+    const card = document.createElement('div');
+    card.className = 'card member-card';
+    
+    const initial = req.user.name.charAt(0).toUpperCase();
+    const requestedAt = new Date(req.created_at).toLocaleDateString();
+    
+    card.innerHTML = `
+      <div class="avatar">${initial}</div>
+      <div class="member-info">
+        <div class="member-name">${req.user.name}</div>
+        <div class="member-email">${req.user.email}</div>
+        <div class="member-joined">Requested on ${requestedAt}</div>
+      </div>
+      <div style="display: flex; gap: var(--spacing-2);">
+        <button class="btn btn-primary btn-sm" onclick="approveRequest('${req.id}')">Approve</button>
+        <button class="btn btn-secondary btn-sm" onclick="rejectRequest('${req.id}')">Reject</button>
+      </div>
+    `;
+    list.appendChild(card);
+  });
+}
+
+async function approveRequest(requestId) {
+  try {
+    await window.CoolKitAPI.api(`/clubs/${window._clubId}/requests/${requestId}/approve`, { method: 'POST' });
+    loadJoinRequests(window._clubId);
+    loadMembers(window._clubId); // reload members to show the new member
+  } catch (err) {
+    alert('Failed to approve request: ' + (err.message || 'Unknown error'));
+  }
+}
+
+async function rejectRequest(requestId) {
+  try {
+    await window.CoolKitAPI.api(`/clubs/${window._clubId}/requests/${requestId}/reject`, { method: 'POST' });
+    loadJoinRequests(window._clubId);
+  } catch (err) {
+    alert('Failed to reject request: ' + (err.message || 'Unknown error'));
   }
 }
 

@@ -104,7 +104,7 @@ func (h *ClubHandler) Join(c *gin.Context) {
 
 	err = h.clubService.JoinClub(clubID, userID)
 	if err != nil {
-		if errors.Is(err, service.ErrAlreadyMember) {
+		if errors.Is(err, service.ErrAlreadyMember) || err.Error() == "you already have a pending join request for this club" {
 			response.Error(c, 409, err.Error())
 			return
 		}
@@ -112,7 +112,7 @@ func (h *ClubHandler) Join(c *gin.Context) {
 		return
 	}
 
-	response.OK(c, gin.H{"message": "Successfully joined club"})
+	response.OK(c, gin.H{"message": "Join request sent! You will be added to the club once the owner approves it."})
 }
 
 func (h *ClubHandler) Members(c *gin.Context) {
@@ -130,4 +130,102 @@ func (h *ClubHandler) Members(c *gin.Context) {
 	}
 
 	response.OK(c, members)
+}
+
+func (h *ClubHandler) GetJoinRequests(c *gin.Context) {
+	idStr := c.Param("id")
+	clubID, err := uuid.Parse(idStr)
+	if err != nil {
+		response.BadRequest(c, "Invalid club ID")
+		return
+	}
+
+	userIDVal, exists := c.Get("user_id")
+	if !exists {
+		response.Unauthorized(c, "User ID not found in context")
+		return
+	}
+	userID := userIDVal.(uuid.UUID)
+
+	requests, err := h.clubService.GetPendingJoinRequests(clubID, userID)
+	if err != nil {
+		if err == service.ErrNotAuthorized {
+			response.Unauthorized(c, err.Error())
+			return
+		}
+		response.InternalError(c, err.Error())
+		return
+	}
+
+	response.OK(c, requests)
+}
+
+func (h *ClubHandler) ApproveJoinRequest(c *gin.Context) {
+	clubIDStr := c.Param("id")
+	_, err := uuid.Parse(clubIDStr)
+	if err != nil {
+		response.BadRequest(c, "Invalid club ID")
+		return
+	}
+
+	reqIDStr := c.Param("request_id")
+	requestID, err := uuid.Parse(reqIDStr)
+	if err != nil {
+		response.BadRequest(c, "Invalid request ID")
+		return
+	}
+
+	userIDVal, exists := c.Get("user_id")
+	if !exists {
+		response.Unauthorized(c, "User ID not found in context")
+		return
+	}
+	userID := userIDVal.(uuid.UUID)
+
+	err = h.clubService.ApproveJoinRequest(requestID, userID)
+	if err != nil {
+		if err == service.ErrNotAuthorized {
+			response.Unauthorized(c, err.Error())
+			return
+		}
+		response.InternalError(c, err.Error())
+		return
+	}
+
+	response.OK(c, gin.H{"message": "Join request approved successfully"})
+}
+
+func (h *ClubHandler) RejectJoinRequest(c *gin.Context) {
+	clubIDStr := c.Param("id")
+	_, err := uuid.Parse(clubIDStr)
+	if err != nil {
+		response.BadRequest(c, "Invalid club ID")
+		return
+	}
+
+	reqIDStr := c.Param("request_id")
+	requestID, err := uuid.Parse(reqIDStr)
+	if err != nil {
+		response.BadRequest(c, "Invalid request ID")
+		return
+	}
+
+	userIDVal, exists := c.Get("user_id")
+	if !exists {
+		response.Unauthorized(c, "User ID not found in context")
+		return
+	}
+	userID := userIDVal.(uuid.UUID)
+
+	err = h.clubService.RejectJoinRequest(requestID, userID)
+	if err != nil {
+		if err == service.ErrNotAuthorized {
+			response.Unauthorized(c, err.Error())
+			return
+		}
+		response.InternalError(c, err.Error())
+		return
+	}
+
+	response.OK(c, gin.H{"message": "Join request rejected successfully"})
 }
