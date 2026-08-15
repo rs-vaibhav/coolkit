@@ -11,7 +11,7 @@ import (
 
 func TestNewClubService(t *testing.T) {
 	// Pass nil as repository since we're just testing the constructor
-	svc := NewClubService(nil)
+	svc := NewClubService(nil, nil)
 	assert.NotNil(t, svc)
 }
 
