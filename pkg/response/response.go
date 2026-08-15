@@ -53,3 +53,11 @@ func NotFound(c *gin.Context, msg string) {
 func InternalError(c *gin.Context, msg string) {
 	Error(c, http.StatusInternalServerError, msg)
 }
+
+func Conflict(c *gin.Context, msg string) {
+	Error(c, http.StatusConflict, msg)
+}
+
+func TooManyRequests(c *gin.Context, msg string) {
+	Error(c, http.StatusTooManyRequests, msg)
+}

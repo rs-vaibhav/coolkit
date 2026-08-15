@@ -32,22 +32,22 @@ type LoginRequest struct {
 func (h *AuthHandler) Register(c *gin.Context) {
 	var req RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, err.Error())
+		response.BadRequest(c, "Invalid request format")
 		return
 	}
 
-	if len(req.Password) < 6 {
-		response.BadRequest(c, "Password must be at least 6 characters")
-		return
-	}
-
-	token, user, err := h.authService.Register(req.Name, req.Email, req.Password)
+	token, user, err := h.authService.Register(c.Request.Context(), req.Name, req.Email, req.Password)
 	if err != nil {
-		if errors.Is(err, service.ErrEmailTaken) {
-			response.Error(c, 409, err.Error())
-			return
+		switch {
+		case errors.Is(err, service.ErrEmailTaken):
+			response.Conflict(c, err.Error())
+		case errors.Is(err, service.ErrInvalidEmail):
+			response.BadRequest(c, err.Error())
+		case errors.Is(err, service.ErrWeakPassword):
+			response.BadRequest(c, err.Error())
+		default:
+			response.InternalError(c, "Failed to register user")
 		}
-		response.InternalError(c, err.Error())
 		return
 	}
 
@@ -60,17 +60,17 @@ func (h *AuthHandler) Register(c *gin.Context) {
 func (h *AuthHandler) Login(c *gin.Context) {
 	var req LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, err.Error())
+		response.BadRequest(c, "Invalid request format")
 		return
 	}
 
-	token, user, err := h.authService.Login(req.Email, req.Password)
+	token, user, err := h.authService.Login(c.Request.Context(), req.Email, req.Password)
 	if err != nil {
 		if errors.Is(err, service.ErrInvalidCredentials) {
-			response.Unauthorized(c, err.Error())
+			response.Unauthorized(c, "Invalid email or password")
 			return
 		}
-		response.InternalError(c, err.Error())
+		response.InternalError(c, "Failed to login")
 		return
 	}
 
@@ -93,7 +93,7 @@ func (h *AuthHandler) Me(c *gin.Context) {
 		return
 	}
 
-	user, err := h.authService.GetCurrentUser(userID)
+	user, err := h.authService.GetCurrentUser(c.Request.Context(), userID)
 	if err != nil {
 		response.NotFound(c, "User not found")
 		return

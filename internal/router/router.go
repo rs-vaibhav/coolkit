@@ -1,6 +1,8 @@
 package router
 
 import (
+	"time"
+
 	"github.com/gin-gonic/gin"
 
 	"github.com/coolkit-org/coolkit/internal/handler"
@@ -28,8 +30,14 @@ func Setup(
 	{
 		v1.GET("/health", healthHandler.Health)
 		v1.GET("/health/db", healthHandler.DBHealth)
-		v1.POST("/auth/register", authHandler.Register)
-		v1.POST("/auth/login", authHandler.Login)
+		
+		// Apply rate limiting to auth endpoints (5 requests per minute)
+		authGroup := v1.Group("")
+		authGroup.Use(middleware.RateLimit(5, time.Minute))
+		{
+			authGroup.POST("/auth/register", authHandler.Register)
+			authGroup.POST("/auth/login", authHandler.Login)
+		}
 
 		protected := v1.Group("")
 		protected.Use(middleware.Auth(jwtSecret))
