@@ -14,7 +14,8 @@ type Event struct {
 	Date            time.Time `gorm:"not null" json:"date"`
 	Location        string    `json:"location"`
 	QRCodeURL       string    `gorm:"type:varchar(500)" json:"qr_code_url"`
-	FormbricksEnvID string    `gorm:"type:varchar(100)" json:"formbricks_env_id"`
+	FormbricksEnvID   string    `gorm:"type:varchar(100)" json:"formbricks_env_id"`
+	FormbricksSurveyID string   `gorm:"type:varchar(100)" json:"formbricks_survey_id"`
 	MatrixRoomID    string    `gorm:"type:varchar(100)" json:"matrix_room_id"`
 	CreatedAt       time.Time `gorm:"autoCreateTime" json:"created_at"`
 	UpdatedAt       time.Time `gorm:"autoUpdateTime" json:"updated_at"`

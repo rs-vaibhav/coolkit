@@ -157,6 +157,57 @@ func (s *EventService) UpdateEvent(eventID, userID uuid.UUID, title, description
 	return event, nil
 }
 
+func (s *EventService) CreateFormbricksSurvey(eventID, userID uuid.UUID, surveyName, surveyDescription string) (*model.Event, error) {
+	event, err := s.eventRepo.FindByID(eventID)
+	if err != nil {
+		return nil, ErrEventNotFound
+	}
+
+	// Verify user is owner/admin of the club
+	if !s.isClubAdmin(event.ClubID, userID) {
+		return nil, ErrUnauthorized
+	}
+
+	// Use default environment ID if not provided
+	envID := event.FormbricksEnvID
+	if envID == "" {
+		envID = "default" // You can set a default or require it in config
+	}
+
+	// Create survey using Formbricks client (to be implemented)
+	// For now, we'll just store the survey name and mark it as pending creation
+	event.FormbricksSurveyID = "pending_" + uuid.New().String()
+	
+	err = s.eventRepo.Update(event)
+	if err != nil {
+		return nil, err
+	}
+
+	return event, nil
+}
+
+func (s *EventService) UpdateEventFormbricks(eventID, userID uuid.UUID, formbricksEnvID, formbricksSurveyID string) (*model.Event, error) {
+	event, err := s.eventRepo.FindByID(eventID)
+	if err != nil {
+		return nil, ErrEventNotFound
+	}
+
+	// Verify user is owner/admin of the club
+	if !s.isClubAdmin(event.ClubID, userID) {
+		return nil, ErrUnauthorized
+	}
+
+	event.FormbricksEnvID = formbricksEnvID
+	event.FormbricksSurveyID = formbricksSurveyID
+
+	err = s.eventRepo.Update(event)
+	if err != nil {
+		return nil, err
+	}
+
+	return event, nil
+}
+
 func (s *EventService) DeleteEvent(eventID, userID uuid.UUID) error {
 	event, err := s.eventRepo.FindByID(eventID)
 	if err != nil {

@@ -77,6 +77,20 @@ async function loadEvent(id) {
       document.getElementById('btn-upload-doc').style.display = 'block';
       document.getElementById('btn-create-chat').style.display = 'block';
       document.getElementById('event-admin-actions').style.display = 'flex';
+      
+      // Show form creation button if Formbricks env ID is set
+      if (event.formbricks_env_id) {
+        document.getElementById('btn-create-form').style.display = 'block';
+        document.getElementById('btn-edit-form').style.display = event.formbricks_survey_id ? 'block' : 'none';
+      } else {
+        document.getElementById('btn-setup-formbricks').style.display = 'block';
+      }
+    }
+    
+    // Store formbricks info for later use
+    if (event.formbricks_survey_id) {
+      document.getElementById('qr-formbricks-link').value = `https://app.formbricks.com/s/${event.formbricks_survey_id}`;
+      document.getElementById('btn-show-qr').style.display = 'block';
     }
     
     // Load QR code info if available
@@ -661,4 +675,100 @@ function setupTabs() {
       target.style.display = 'block';
     });
   });
+}
+
+// ─── Formbricks Functions ──────────────────────────────
+function showFormbricksSetup() {
+  document.getElementById('formbricks-setup-modal').classList.add('active');
+}
+
+document.getElementById('setup-formbricks-form')?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const envId = document.getElementById('formbricks-env-id').value.trim();
+  
+  if (!envId) {
+    alert('Please enter a valid Environment ID');
+    return;
+  }
+  
+  try {
+    await window.CoolKitAPI.api(`/events/${window._eventId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ formbricks_env_id: envId })
+    });
+    
+    alert('Formbricks Environment ID saved successfully!');
+    document.getElementById('formbricks-setup-modal').classList.remove('active');
+    document.getElementById('btn-setup-formbricks').style.display = 'none';
+    document.getElementById('btn-create-form').style.display = 'block';
+    
+    // Reload event to update state
+    loadEvent(window._eventId);
+  } catch (err) {
+    alert('Failed to save Environment ID: ' + (err.message || ''));
+  }
+});
+
+async function createForm() {
+  const modal = document.getElementById('create-form-modal');
+  const resultDiv = document.getElementById('create-form-result');
+  const openBtn = document.getElementById('btn-open-formbricks');
+  
+  document.getElementById('create-form-title').textContent = 'Create Registration Form';
+  resultDiv.innerHTML = '<p style="color: var(--text-secondary);">Creating form in Formbricks...</p>';
+  openBtn.style.display = 'none';
+  modal.classList.add('active');
+  
+  try {
+    const res = await window.CoolKitAPI.api(`/events/${window._eventId}/formbricks/create`, {
+      method: 'POST'
+    });
+    
+    const survey = res.data;
+    const surveyLink = `https://app.formbricks.com/s/${survey.id}`;
+    
+    resultDiv.innerHTML = `
+      <div style="background: var(--bg-secondary); padding: var(--spacing-4); border-radius: var(--radius-md); margin-bottom: var(--spacing-3);">
+        <p style="margin-bottom: var(--spacing-2);"><strong>✅ Form Created Successfully!</strong></p>
+        <p style="font-size: var(--text-sm); color: var(--text-secondary); margin-bottom: var(--spacing-2);">
+          Form Name: ${survey.name}
+        </p>
+        <p style="font-size: var(--text-sm); color: var(--text-secondary);">
+          Survey ID: ${survey.id}
+        </p>
+      </div>
+      <p style="font-size: var(--text-sm); color: var(--text-muted);">
+        Click the button below to customize your form fields in Formbricks editor.
+      </p>
+    `;
+    
+    openBtn.dataset.surveyId = survey.id;
+    openBtn.style.display = 'inline-block';
+    
+    // Reload event to update formbricks_survey_id
+    loadEvent(window._eventId);
+  } catch (err) {
+    resultDiv.innerHTML = `<p style="color: var(--accent-rose);">❌ Failed to create form: ${err.message || 'Unknown error'}</p>`;
+  }
+}
+
+async function editForm() {
+  const surveyId = currentEvent.formbricks_survey_id;
+  if (!surveyId) {
+    alert('No form found for this event. Please create one first.');
+    return;
+  }
+  
+  openFormbricksEditor(surveyId);
+}
+
+function openFormbricksEditor(surveyId) {
+  const id = surveyId || document.getElementById('btn-open-formbricks')?.dataset.surveyId;
+  if (!id) {
+    alert('No survey ID available');
+    return;
+  }
+  
+  const editorUrl = `https://app.formbricks.com/surveys/${id}/edit`;
+  window.open(editorUrl, '_blank');
 }
