@@ -1,12 +1,13 @@
 package handler
 
 import (
-"time"
+	"fmt"
+	"time"
 
-"github.com/coolkit-org/coolkit/internal/service"
-"github.com/coolkit-org/coolkit/pkg/response"
-"github.com/gin-gonic/gin"
-"github.com/google/uuid"
+	"github.com/coolkit-org/coolkit/internal/service"
+	"github.com/coolkit-org/coolkit/pkg/response"
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 type EventHandler struct {
@@ -196,32 +197,34 @@ if !exists {
 response.Unauthorized(c, "Unauthorized")
 return
 }
-userID := userIDVal.(uuid.UUID)
+	userID := userIDVal.(uuid.UUID)
 
-type Request struct {
-SurveyName        string `json:"survey_name" binding:"required"`
-SurveyDescription string `json:"survey_description"`
-}
+	type CreateSurveyRequest struct {
+		SurveyName        string `json:"survey_name" binding:"required"`
+		SurveyDescription string `json:"survey_description"`
+		UseDefaults       bool   `json:"use_defaults"` // If true, use default registration questions
+	}
 
-var req Request
-if err := c.ShouldBindJSON(&req); err != nil {
-response.BadRequest(c, err.Error())
-return
-}
+	var req CreateSurveyRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, err.Error())
+		return
+	}
 
-event, err := h.eventService.CreateFormbricksSurvey(eventID, userID, req.SurveyName, req.SurveyDescription)
-if err != nil {
-if err == service.ErrUnauthorized {
-response.Unauthorized(c, err.Error())
-return
-}
-response.InternalError(c, err.Error())
-return
-}
+	event, err := h.eventService.CreateFormbricksSurvey(eventID, userID, req.SurveyName, req.SurveyDescription, req.UseDefaults)
+	if err != nil {
+		if err == service.ErrUnauthorized {
+			response.Unauthorized(c, err.Error())
+			return
+		}
+		response.InternalError(c, err.Error())
+		return
+	}
 
-response.OK(c, gin.H{
-"message":           "Survey created successfully",
-"survey_id":         event.FormbricksSurveyID,
-"formbricks_env_id": event.FormbricksEnvID,
-})
+	response.OK(c, gin.H{
+		"message":           "Survey created successfully",
+		"survey_id":         event.FormbricksSurveyID,
+		"formbricks_env_id": event.FormbricksEnvID,
+		"survey_url":        fmt.Sprintf("https://app.formbricks.com/s/%s", event.FormbricksSurveyID),
+	})
 }

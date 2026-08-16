@@ -2,9 +2,11 @@ package service
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/coolkit-org/coolkit/internal/model"
+	"github.com/coolkit-org/coolkit/internal/pkg/formbricks"
 	"github.com/coolkit-org/coolkit/internal/repository"
 	"github.com/google/uuid"
 )
@@ -157,7 +159,7 @@ func (s *EventService) UpdateEvent(eventID, userID uuid.UUID, title, description
 	return event, nil
 }
 
-func (s *EventService) CreateFormbricksSurvey(eventID, userID uuid.UUID, surveyName, surveyDescription string) (*model.Event, error) {
+func (s *EventService) CreateFormbricksSurvey(eventID, userID uuid.UUID, surveyName, surveyDescription string, useDefaults bool) (*model.Event, error) {
 	event, err := s.eventRepo.FindByID(eventID)
 	if err != nil {
 		return nil, ErrEventNotFound
@@ -168,15 +170,30 @@ func (s *EventService) CreateFormbricksSurvey(eventID, userID uuid.UUID, surveyN
 		return nil, ErrUnauthorized
 	}
 
-	// Use default environment ID if not provided
-	envID := event.FormbricksEnvID
-	if envID == "" {
-		envID = "default" // You can set a default or require it in config
+	// Initialize Formbricks client
+	fbClient := formbricks.NewClient()
+
+	// Create a new environment for this event
+	envID, err := fbClient.CreateEnvironment(event.Title)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create Formbricks environment: %w", err)
 	}
 
-	// Create survey using Formbricks client (to be implemented)
-	// For now, we'll just store the survey name and mark it as pending creation
-	event.FormbricksSurveyID = "pending_" + uuid.New().String()
+	// Create survey - either with defaults or custom
+	var survey *formbricks.Survey
+	if useDefaults {
+		survey, err = fbClient.CreateSurveyWithDefaults(surveyName, envID)
+	} else {
+		survey, err = fbClient.CreateSurvey(surveyName, surveyDescription, envID)
+	}
+	
+	if err != nil {
+		return nil, fmt.Errorf("failed to create Formbricks survey: %w", err)
+	}
+
+	// Update event with Formbricks IDs
+	event.FormbricksEnvID = envID
+	event.FormbricksSurveyID = survey.ID
 	
 	err = s.eventRepo.Update(event)
 	if err != nil {
