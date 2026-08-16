@@ -83,6 +83,13 @@ func Setup(
 			protected.POST("/events/:id/roles", eventRoleHandler.AssignRole)
 			protected.DELETE("/events/:id/roles/:role_id", eventRoleHandler.RemoveRole)
 
+			// Formbricks
+			protected.POST("/events/:id/formbricks/setup", eventHandler.UpdateEventWithFormbricks)
+			protected.POST("/events/:id/formbricks/create", eventHandler.CreateFormbricksSurvey)
+
+			// Documents
+			// Note: documentHandler needs to be added if it's not initialized in router.go
+
 			// Tasks (per event)
 			protected.POST("/events/:id/tasks", taskHandler.Create)
 			protected.GET("/events/:id/tasks", taskHandler.List)
