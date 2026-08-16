@@ -78,12 +78,12 @@ async function loadEvent(id) {
       document.getElementById('btn-create-chat').style.display = 'block';
       document.getElementById('event-admin-actions').style.display = 'flex';
       
-      // Show form creation button if Formbricks env ID is set
-      if (event.formbricks_env_id) {
-        document.getElementById('btn-create-form').style.display = 'block';
-        document.getElementById('btn-edit-form').style.display = event.formbricks_survey_id ? 'block' : 'none';
+      // Show form creation/edit buttons based on survey status
+      if (event.formbricks_survey_id) {
+        document.getElementById('btn-edit-form').style.display = 'block';
+        document.getElementById('btn-show-qr').style.display = 'block';
       } else {
-        document.getElementById('btn-setup-formbricks').style.display = 'block';
+        document.getElementById('btn-create-form').style.display = 'block';
       }
     }
     
@@ -720,6 +720,7 @@ async function createForm() {
   modal.classList.add('active');
   
   try {
+    // Create form using backend API with stored API key
     const res = await window.CoolKitAPI.api(`/events/${window._eventId}/formbricks/create`, {
       method: 'POST'
     });
@@ -728,22 +729,27 @@ async function createForm() {
     const surveyLink = `https://app.formbricks.com/s/${survey.id}`;
     
     resultDiv.innerHTML = `
-      <div style="background: var(--bg-secondary); padding: var(--spacing-4); border-radius: var(--radius-md); margin-bottom: var(--spacing-3);">
-        <p style="margin-bottom: var(--spacing-2);"><strong>✅ Form Created Successfully!</strong></p>
+      <div style="background: var(--bg-success); padding: var(--spacing-4); border-radius: var(--radius-md); margin-bottom: var(--spacing-3);">
+        <p style="margin-bottom: var(--spacing-2); color: var(--accent-green);"><strong>✅ Form Created Successfully!</strong></p>
         <p style="font-size: var(--text-sm); color: var(--text-secondary); margin-bottom: var(--spacing-2);">
-          Form Name: ${survey.name}
+          A default registration form has been created for your event.
         </p>
         <p style="font-size: var(--text-sm); color: var(--text-secondary);">
           Survey ID: ${survey.id}
         </p>
       </div>
       <p style="font-size: var(--text-sm); color: var(--text-muted);">
-        Click the button below to customize your form fields in Formbricks editor.
+        Click the button below to customize form fields (add/remove questions) in Formbricks editor.
       </p>
     `;
     
     openBtn.dataset.surveyId = survey.id;
     openBtn.style.display = 'inline-block';
+    
+    // Update button visibility
+    document.getElementById('btn-create-form').style.display = 'none';
+    document.getElementById('btn-edit-form').style.display = 'block';
+    document.getElementById('btn-show-qr').style.display = 'block';
     
     // Reload event to update formbricks_survey_id
     loadEvent(window._eventId);

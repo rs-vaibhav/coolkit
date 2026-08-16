@@ -126,10 +126,9 @@
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-4);">
           <h3 style="margin: 0;">RSVP & Participation</h3>
           <div style="display: flex; gap: var(--spacing-2);">
-            <button class="btn btn-ghost btn-sm" id="btn-setup-formbricks" style="display: none;" onclick="showFormbricksSetup()" title="Setup Formbricks Environment">🔧 Setup Formbricks</button>
-            <button class="btn btn-ghost btn-sm" id="btn-create-form" style="display: none;" onclick="createForm()" title="Create Registration Form">📝 Create Form</button>
+            <button class="btn btn-primary btn-sm" id="btn-create-form" style="display: none;" onclick="createForm()" title="Create Registration Form">📝 Create Form</button>
             <button class="btn btn-ghost btn-sm" id="btn-edit-form" style="display: none;" onclick="editForm()" title="Edit Registration Form">✏️ Edit Form</button>
-            <button class="btn btn-primary btn-sm" id="btn-show-qr" style="display: none;" onclick="showQRCode()">📱 Show QR Code</button>
+            <button class="btn btn-ghost btn-sm" id="btn-show-qr" style="display: none;" onclick="showQRCode()" title="Show QR Code for Registration">📱 Show QR Code</button>
           </div>
         </div>
         <div class="overview-stats" style="margin-bottom: var(--spacing-6);">
@@ -350,35 +349,6 @@
     </div>
   </div>
 
-  <!-- Formbricks Setup Modal -->
-  <div id="formbricks-setup-modal" class="modal-overlay">
-    <div class="modal">
-      <div class="modal-header">
-        <h3>Setup Formbricks Integration</h3>
-        <button class="btn-icon btn-ghost" onclick="this.closest('.modal-overlay').classList.remove('active')">&times;</button>
-      </div>
-      <div class="modal-body">
-        <p style="margin-bottom: var(--spacing-4); color: var(--text-secondary);">
-          To create registration forms, you need to provide your Formbricks Environment ID. 
-          You can find this in your Formbricks dashboard under Settings → Environments.
-        </p>
-        <form id="setup-formbricks-form">
-          <div class="form-group">
-            <label class="form-label">Formbricks Environment ID</label>
-            <input type="text" id="formbricks-env-id" class="form-input" required placeholder="e.g., cm5xyz...">
-            <small style="color: var(--text-muted); font-size: var(--text-xs);">
-              This will be saved for the event. The API key is already configured on the server.
-            </small>
-          </div>
-          <div style="display: flex; gap: var(--spacing-2); justify-content: flex-end; margin-top: var(--spacing-4);">
-            <button type="button" class="btn btn-ghost" onclick="this.closest('.modal-overlay').classList.remove('active')">Cancel</button>
-            <button type="submit" class="btn btn-primary">Save Environment ID</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
-
   <!-- Create/Edit Form Modal -->
   <div id="create-form-modal" class="modal-overlay">
     <div class="modal">
@@ -388,13 +358,13 @@
       </div>
       <div class="modal-body">
         <p style="margin-bottom: var(--spacing-4); color: var(--text-secondary);">
-          This will create a new registration form in Formbricks for this event.
-          After creation, you'll be able to customize the form fields in Formbricks dashboard.
+          This will automatically create a registration form for your event using Formbricks.
+          No need to visit Formbricks separately - just click create and start customizing!
         </p>
         <div id="create-form-result" style="margin-bottom: var(--spacing-4);"></div>
         <div style="display: flex; gap: var(--spacing-2); justify-content: flex-end;">
           <button type="button" class="btn btn-ghost" onclick="this.closest('.modal-overlay').classList.remove('active')">Close</button>
-          <button type="button" id="btn-open-formbricks" class="btn btn-primary" style="display: none;" onclick="openFormbricksEditor()">Open in Formbricks</button>
+          <button type="button" id="btn-open-formbricks" class="btn btn-primary" style="display: none;" onclick="openFormbricksEditor()">✏️ Open Editor to Customize</button>
         </div>
       </div>
     </div>
