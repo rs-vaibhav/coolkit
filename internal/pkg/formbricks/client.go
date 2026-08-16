@@ -10,6 +10,7 @@ import (
 )
 
 const BaseURL = "https://app.formbricks.com/api/v1"
+const BaseURLV2 = "https://app.formbricks.com/api/v2"
 
 type Client struct {
 	APIKey string
@@ -18,6 +19,37 @@ type Client struct {
 type Organization struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
+}
+
+type WorkspacesResponse struct {
+	Data []Workspace `json:"data"`
+}
+
+type Workspace struct {
+	ID          string `json:"id"`
+	Name        string `json:"name"`
+	OrganizationID string `json:"organizationId"`
+}
+
+type UserInfo struct {
+	OrganizationID string `json:"organizationId"`
+	WorkspacePermissions []WorkspacePermission `json:"workspacePermissions"`
+	EnvironmentPermissions []EnvPermission `json:"environmentPermissions"`
+}
+
+type WorkspacePermission struct {
+	WorkspaceID string `json:"workspaceId"`
+	Access      AccessControl `json:"accessControl"`
+}
+
+type EnvPermission struct {
+	EnvironmentID string `json:"environmentId"`
+	Access        AccessControl `json:"accessControl"`
+}
+
+type AccessControl struct {
+	Read  bool `json:"read"`
+	Write bool `json:"write"`
 }
 
 type OrganizationsResponse struct {
@@ -80,9 +112,44 @@ func NewClient() *Client {
 	}
 }
 
-// GetOrganization fetches the first organization associated with the API key
-func (c *Client) GetOrganization() (*Organization, error) {
-	req, err := http.NewRequest("GET", fmt.Sprintf("%s/organizations", BaseURL), nil)
+// GetOrganization fetches the organization ID associated with the API key using v2 API
+func (c *Client) GetOrganization() (string, error) {
+	req, err := http.NewRequest("GET", fmt.Sprintf("%s/me", BaseURLV2), nil)
+	if err != nil {
+		return "", err
+	}
+
+	req.Header.Set("x-api-key", c.APIKey)
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return "", fmt.Errorf("failed to get user info: %s (Status: %d)", string(body), resp.StatusCode)
+	}
+
+	var result struct {
+		Data UserInfo `json:"data"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return "", err
+	}
+
+	if result.Data.OrganizationID == "" {
+		return "", fmt.Errorf("no organization found for this API key")
+	}
+
+	return result.Data.OrganizationID, nil
+}
+
+// GetWorkspaces fetches all workspaces accessible by the API key
+func (c *Client) GetWorkspaces() ([]Workspace, error) {
+	req, err := http.NewRequest("GET", fmt.Sprintf("%s/workspaces", BaseURL), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -98,19 +165,15 @@ func (c *Client) GetOrganization() (*Organization, error) {
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
-		return nil, fmt.Errorf("failed to get organization: %s (Status: %d)", string(body), resp.StatusCode)
+		return nil, fmt.Errorf("failed to get workspaces: %s (Status: %d)", string(body), resp.StatusCode)
 	}
 
-	var result OrganizationsResponse
+	var result WorkspacesResponse
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err
 	}
 
-	if len(result.Data) == 0 {
-		return nil, fmt.Errorf("no organizations found for this API key")
-	}
-
-	return &result.Data[0], nil
+	return result.Data, nil
 }
 
 // CreateEnvironment creates a new environment in Formbricks
