@@ -47,7 +47,7 @@ func (s *AnalyticsService) GetClubAnalytics(clubID, userID uuid.UUID) (*model.Cl
 
 	monthlyMap := make(map[string]int64)
 	for _, m := range members {
-		month := m.JoinedAt.Format("2006-02") // format as YYYY-MM
+		month := m.JoinedAt.Format("2006-01") // format as YYYY-MM
 		monthlyMap[month]++
 	}
 

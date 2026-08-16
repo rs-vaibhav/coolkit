@@ -94,13 +94,13 @@ func (r *ClubRepository) UpdateSettings(clubID uuid.UUID, ownerLabel, adminLabel
 	}).Error
 }
 
-func (r *ClubRepository) UpdateClubImages(clubID uuid.UUID, profileImage, bannerImage string) error {
+func (r *ClubRepository) UpdateClubImages(clubID uuid.UUID, profileImage, bannerImage *string) error {
 	updates := make(map[string]interface{})
-	if profileImage != "" {
-		updates["profile_image"] = profileImage
+	if profileImage != nil {
+		updates["profile_image"] = *profileImage
 	}
-	if bannerImage != "" {
-		updates["banner_image"] = bannerImage
+	if bannerImage != nil {
+		updates["banner_image"] = *bannerImage
 	}
 	if len(updates) == 0 {
 		return nil

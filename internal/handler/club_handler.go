@@ -287,8 +287,8 @@ func (h *ClubHandler) UpdateSettings(c *gin.Context) {
 }
 
 type UpdateClubImagesRequest struct {
-	ProfileImage string `json:"profile_image"`
-	BannerImage  string `json:"banner_image"`
+	ProfileImage *string `json:"profile_image"`
+	BannerImage  *string `json:"banner_image"`
 }
 
 func (h *ClubHandler) UpdateClubImages(c *gin.Context) {

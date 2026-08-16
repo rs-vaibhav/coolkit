@@ -49,6 +49,8 @@ func TestPhase3Integration(t *testing.T) {
 			owner_label TEXT DEFAULT 'Owner',
 			admin_label TEXT DEFAULT 'Admin',
 			leadership_label TEXT DEFAULT 'Leadership',
+			profile_image TEXT,
+			banner_image TEXT,
 			created_at DATETIME,
 			updated_at DATETIME,
 			deleted_at DATETIME
@@ -81,6 +83,11 @@ func TestPhase3Integration(t *testing.T) {
 			amount REAL NOT NULL,
 			description TEXT,
 			date DATETIME,
+			proof_image TEXT,
+			status TEXT DEFAULT 'approved',
+			approved_by_id TEXT,
+			approved_at DATETIME,
+			rejection_reason TEXT,
 			created_at DATETIME,
 			updated_at DATETIME
 		)`,
@@ -204,6 +211,7 @@ func TestPhase3Integration(t *testing.T) {
 		Amount:      10000.0,
 		Description: "Sponsorship from Tech Corp",
 		Date:        time.Now(),
+		Status:      model.FinanceStatusApproved,
 	}
 	expense := &model.FinanceEntry{
 		ID:          uuid.New(),
@@ -214,6 +222,7 @@ func TestPhase3Integration(t *testing.T) {
 		Amount:      3000.0,
 		Description: "Pizza order for participants",
 		Date:        time.Now(),
+		Status:      model.FinanceStatusApproved,
 	}
 	assert.NoError(t, financeRepo.Create(income))
 	assert.NoError(t, financeRepo.Create(expense))

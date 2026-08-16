@@ -22,48 +22,62 @@ func main() {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
 
+	// Enable uuid-ossp extension for UUID generation
+	db.Exec(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`)
+
 	fmt.Println("Running database migrations...")
 
-	// Auto-migrate all models
+	// Auto-migrate all models (must match cmd/server/main.go)
 	err = db.AutoMigrate(
 		&model.User{},
 		&model.Club{},
+		&model.ClubMember{},
 		&model.Event{},
-		&model.Task{},
+		&model.EventRole{},
 		&model.Announcement{},
+		&model.Task{},
+		&model.FinanceEntry{},
+		&model.JoinRequest{},
+		&model.HierarchyLevel{},
+		&model.Domain{},
 		&model.Booking{},
 		&model.Resource{},
-		&model.Domain{},
-		&model.JoinRequest{},
-		&model.EventRole{},
-		&model.FinanceEntry{},
 	)
 
 	if err != nil {
 		log.Fatalf("Failed to migrate database: %v", err)
 	}
 
-	fmt.Println("✅ Database migration completed successfully!")
+	// Backfill existing finance entries that have no status set
+	result := db.Exec("UPDATE finance_entries SET status = 'approved' WHERE status IS NULL OR status = ''")
+	if result.Error != nil {
+		log.Printf("Warning: failed to backfill finance entries: %v", result.Error)
+	} else if result.RowsAffected > 0 {
+		fmt.Printf("  Backfilled %d existing finance entries to 'approved' status\n", result.RowsAffected)
+	}
+
+	fmt.Println("Database migration completed successfully!")
 	fmt.Println("New fields added:")
 	fmt.Println("  - Club: profile_image, banner_image")
 	fmt.Println("  - FinanceEntry: proof_image, status, approved_by_id, approved_at, rejection_reason")
-	
+
 	// Verify new columns exist
 	if db.Migrator().HasColumn(&model.Club{}, "profile_image") {
-		fmt.Println("  ✓ Club.profile_image column exists")
+		fmt.Println("  - Club.profile_image column exists")
 	}
 	if db.Migrator().HasColumn(&model.Club{}, "banner_image") {
-		fmt.Println("  ✓ Club.banner_image column exists")
+		fmt.Println("  - Club.banner_image column exists")
 	}
 	if db.Migrator().HasColumn(&model.FinanceEntry{}, "proof_image") {
-		fmt.Println("  ✓ FinanceEntry.proof_image column exists")
+		fmt.Println("  - FinanceEntry.proof_image column exists")
 	}
 	if db.Migrator().HasColumn(&model.FinanceEntry{}, "status") {
-		fmt.Println("  ✓ FinanceEntry.status column exists")
+		fmt.Println("  - FinanceEntry.status column exists")
 	}
 	if db.Migrator().HasColumn(&model.FinanceEntry{}, "approved_by_id") {
-		fmt.Println("  ✓ FinanceEntry.approved_by_id column exists")
+		fmt.Println("  - FinanceEntry.approved_by_id column exists")
 	}
 
 	os.Exit(0)
 }
+

@@ -36,7 +36,7 @@ type FinanceEntry struct {
 
 	Event     Event `gorm:"foreignKey:EventID;constraint:OnDelete:CASCADE;" json:"event"`
 	CreatedBy User  `gorm:"foreignKey:CreatedByID;constraint:OnDelete:CASCADE;" json:"created_by"`
-	ApprovedBy User  `gorm:"foreignKey:ApprovedByID;constraint:OnDelete:SET NULL;" json:"approved_by,omitempty"`
+	ApprovedBy *User  `gorm:"foreignKey:ApprovedByID;constraint:OnDelete:SET NULL;" json:"approved_by,omitempty"`
 }
 
 type FinanceSummary struct {

@@ -334,7 +334,7 @@ func (s *ClubService) UpdateSettings(clubID, requesterID uuid.UUID, ownerLabel, 
 	return s.clubRepo.UpdateSettings(clubID, ownerLabel, adminLabel, leadershipLabel)
 }
 
-func (s *ClubService) UpdateClubImages(clubID, requesterID uuid.UUID, profileImage, bannerImage string) error {
+func (s *ClubService) UpdateClubImages(clubID, requesterID uuid.UUID, profileImage, bannerImage *string) error {
 	members, err := s.clubRepo.FindMembers(clubID)
 	if err != nil {
 		return err

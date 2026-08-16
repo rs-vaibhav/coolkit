@@ -41,7 +41,7 @@ func main() {
 	}
 
 	// Auto-migrate models
-	err = db.AutoMigrate(&model.User{}, &model.Club{}, &model.ClubMember{}, &model.Event{}, &model.EventRole{}, &model.Announcement{}, &model.Task{}, &model.FinanceEntry{}, &model.JoinRequest{}, &model.HierarchyLevel{}, &model.Domain{})
+	err = db.AutoMigrate(&model.User{}, &model.Club{}, &model.ClubMember{}, &model.Event{}, &model.EventRole{}, &model.Announcement{}, &model.Task{}, &model.FinanceEntry{}, &model.JoinRequest{}, &model.HierarchyLevel{}, &model.Domain{}, &model.Booking{}, &model.Resource{})
 	if err != nil {
 		log.Fatalf("Failed to auto-migrate models: %v", err)
 	}
