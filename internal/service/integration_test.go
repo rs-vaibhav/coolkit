@@ -71,6 +71,9 @@ func TestPhase3Integration(t *testing.T) {
 			description TEXT,
 			date DATETIME NOT NULL,
 			location TEXT,
+			qr_code_url TEXT,
+			formbricks_env_id TEXT,
+			matrix_room_id TEXT,
 			created_at DATETIME,
 			updated_at DATETIME
 		)`,
