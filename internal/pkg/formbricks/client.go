@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 )
@@ -12,6 +13,15 @@ const BaseURL = "https://app.formbricks.com/api/v1"
 
 type Client struct {
 	APIKey string
+}
+
+type Organization struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
+type OrganizationsResponse struct {
+	Data []Organization `json:"data"`
 }
 
 type Environment struct {
@@ -70,8 +80,41 @@ func NewClient() *Client {
 	}
 }
 
+// GetOrganization fetches the first organization associated with the API key
+func (c *Client) GetOrganization() (*Organization, error) {
+	req, err := http.NewRequest("GET", fmt.Sprintf("%s/organizations", BaseURL), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("x-api-key", c.APIKey)
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("failed to get organization: %s (Status: %d)", string(body), resp.StatusCode)
+	}
+
+	var result OrganizationsResponse
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, err
+	}
+
+	if len(result.Data) == 0 {
+		return nil, fmt.Errorf("no organizations found for this API key")
+	}
+
+	return &result.Data[0], nil
+}
+
 // CreateEnvironment creates a new environment in Formbricks
-func (c *Client) CreateEnvironment(eventName string) (string, error) {
+func (c *Client) CreateEnvironment(orgID, eventName string) (string, error) {
 	reqBody := CreateEnvironmentRequest{
 		Name: fmt.Sprintf("Event: %s", eventName),
 		Type: "production",
@@ -82,7 +125,7 @@ func (c *Client) CreateEnvironment(eventName string) (string, error) {
 		return "", err
 	}
 
-	req, err := http.NewRequest("POST", fmt.Sprintf("%s/environments", BaseURL), bytes.NewBuffer(jsonData))
+	req, err := http.NewRequest("POST", fmt.Sprintf("%s/organizations/%s/environments", BaseURL, orgID), bytes.NewBuffer(jsonData))
 	if err != nil {
 		return "", err
 	}
@@ -98,7 +141,8 @@ func (c *Client) CreateEnvironment(eventName string) (string, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusCreated && resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("failed to create environment: status %d", resp.StatusCode)
+		body, _ := io.ReadAll(resp.Body)
+		return "", fmt.Errorf("failed to create environment: %s (Status: %d)", string(body), resp.StatusCode)
 	}
 
 	var result CreateEnvironmentResponse
@@ -168,7 +212,8 @@ func (c *Client) CreateSurveyWithDefaults(name, envID string) (*Survey, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusCreated && resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("failed to create survey: status %d", resp.StatusCode)
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("failed to create survey: %s (Status: %d)", string(body), resp.StatusCode)
 	}
 
 	var result CreateSurveyResponse

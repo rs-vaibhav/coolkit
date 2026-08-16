@@ -173,8 +173,14 @@ func (s *EventService) CreateFormbricksSurvey(eventID, userID uuid.UUID, surveyN
 	// Initialize Formbricks client
 	fbClient := formbricks.NewClient()
 
-	// Create a new environment for this event
-	envID, err := fbClient.CreateEnvironment(event.Title)
+	// Get the organization first
+	org, err := fbClient.GetOrganization()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get Formbricks organization: %w", err)
+	}
+
+	// Create a new environment for this event in the organization
+	envID, err := fbClient.CreateEnvironment(org.ID, event.Title)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create Formbricks environment: %w", err)
 	}
