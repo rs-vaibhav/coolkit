@@ -48,8 +48,11 @@
       <nav class="club-nav" style="margin-top: var(--spacing-6);">
         <button class="tab-btn active" data-tab="tab-overview">Overview</button>
         <button class="tab-btn" data-tab="tab-hierarchy">Team Hierarchy</button>
+        <button class="tab-btn" data-tab="tab-rsvp">RSVP & Check-in</button>
         <button class="tab-btn" data-tab="tab-tasks">Tasks</button>
         <button class="tab-btn" data-tab="tab-finance">Finance</button>
+        <button class="tab-btn" data-tab="tab-documents">Documents</button>
+        <button class="tab-btn" data-tab="tab-chat">Chat</button>
       </nav>
     </aside>
 
@@ -116,6 +119,67 @@
           </div>
         </div>
         <div id="finance-entries"></div>
+      </div>
+
+      <!-- RSVP Tab -->
+      <div id="tab-rsvp" class="tab-content" style="display: none;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-4);">
+          <h3 style="margin: 0;">RSVP & Participation</h3>
+          <button class="btn btn-primary btn-sm" id="btn-show-qr" onclick="showQRCode()">Show QR Code</button>
+        </div>
+        <div class="overview-stats" style="margin-bottom: var(--spacing-6);">
+          <div class="card stat-card">
+            <span class="stat-label">Going</span>
+            <span class="stat-value" id="rsvp-going" style="color: var(--accent-green);">0</span>
+          </div>
+          <div class="card stat-card">
+            <span class="stat-label">Interested</span>
+            <span class="stat-value" id="rsvp-interested" style="color: var(--accent-amber);">0</span>
+          </div>
+          <div class="card stat-card">
+            <span class="stat-label">Not Going</span>
+            <span class="stat-value" id="rsvp-not-going" style="color: var(--text-muted);">0</span>
+          </div>
+        </div>
+        <div class="card" style="margin-bottom: var(--spacing-4);">
+          <h4 style="margin-bottom: var(--spacing-3);">Your RSVP Status</h4>
+          <div id="rsvp-user-status" style="margin-bottom: var(--spacing-3);">
+            <p style="color: var(--text-muted);">Loading your RSVP status...</p>
+          </div>
+          <div id="rsvp-actions" style="display: flex; gap: var(--spacing-2);">
+            <button class="btn btn-success btn-sm" onclick="submitRSVP('going')">✅ Going</button>
+            <button class="btn btn-secondary btn-sm" onclick="submitRSVP('interested')">🤔 Interested</button>
+            <button class="btn btn-ghost btn-sm" style="color: var(--accent-rose);" onclick="submitRSVP('not_going')">❌ Not Going</button>
+          </div>
+        </div>
+        <div class="card">
+          <h4 style="margin-bottom: var(--spacing-3);">Attendee List</h4>
+          <div id="rsvp-attendees-list"></div>
+        </div>
+      </div>
+
+      <!-- Documents Tab -->
+      <div id="tab-documents" class="tab-content" style="display: none;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-4);">
+          <h3 style="margin: 0;">Event Documents</h3>
+          <button class="btn btn-primary btn-sm" id="btn-upload-doc" style="display: none;" onclick="document.getElementById('upload-doc-modal').classList.add('active')">Upload Document</button>
+        </div>
+        <div id="documents-list"></div>
+      </div>
+
+      <!-- Chat Tab -->
+      <div id="tab-chat" class="tab-content" style="display: none;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-4);">
+          <h3 style="margin: 0;">Event Chat (Matrix)</h3>
+          <button class="btn btn-primary btn-sm" id="btn-create-chat" style="display: none;" onclick="createMatrixRoom()">Create Chat Room</button>
+        </div>
+        <div id="chat-container" class="card" style="min-height: 400px; display: flex; align-items: center; justify-content: center;">
+          <div style="text-align: center; color: var(--text-muted);">
+            <div style="font-size: 48px; margin-bottom: var(--spacing-4);">💬</div>
+            <p>No chat room configured for this event.</p>
+            <p style="font-size: var(--text-sm); margin-top: var(--spacing-2);">Admins can create a Matrix room for team communication.</p>
+          </div>
+        </div>
       </div>
       
     </div>
@@ -252,14 +316,75 @@
             <label class="form-label">Date</label>
             <input type="date" id="finance-date" class="form-input" required>
           </div>
+          <div class="form-group">
+            <label class="form-label">Transaction Proof (Image)</label>
+            <input type="file" id="finance-proof" class="form-input" accept="image/*">
+            <small style="color: var(--text-muted); font-size: var(--text-xs);">Upload receipt or transaction screenshot (optional)</small>
+          </div>
           <button type="submit" class="btn btn-primary" style="width: 100%;">Add Entry</button>
         </form>
       </div>
     </div>
   </div>
 
-  <script src="js/api.js?v=7"></script>
-  <script src="js/auth.js?v=7"></script>
-  <script src="js/event.js?v=7"></script>
+  <!-- QR Code Modal -->
+  <div id="qr-code-modal" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Event Registration QR</h3>
+        <button class="btn-icon btn-ghost" onclick="this.closest('.modal-overlay').classList.remove('active')">&times;</button>
+      </div>
+      <div class="modal-body" style="text-align: center;">
+        <div id="qr-code-container" style="margin-bottom: var(--spacing-4);">
+          <p style="color: var(--text-muted);">Loading QR code...</p>
+        </div>
+        <p style="font-size: var(--text-sm); color: var(--text-secondary); margin-bottom: var(--spacing-4);">Scan this QR code to register via Formbricks</p>
+        <button class="btn btn-primary" onclick="navigator.clipboard.writeText(document.getElementById('qr-formbricks-link').value).then(() => alert('Link copied!'))">Copy Registration Link</button>
+        <input type="hidden" id="qr-formbricks-link">
+      </div>
+    </div>
+  </div>
+
+  <!-- Upload Document Modal -->
+  <div id="upload-doc-modal" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Upload Document</h3>
+        <button class="btn-icon btn-ghost" onclick="this.closest('.modal-overlay').classList.remove('active')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="upload-doc-form">
+          <div class="form-group">
+            <label class="form-label">Document Title</label>
+            <input type="text" id="doc-title" class="form-input" required placeholder="e.g. Permission Letter">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Document Type</label>
+            <select id="doc-type" class="form-input" required>
+              <option value="permission_letter">Permission Letter</option>
+              <option value="invoice">Invoice</option>
+              <option value="receipt">Receipt</option>
+              <option value="contract">Contract</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Upload File</label>
+            <input type="file" id="doc-file" class="form-input" required accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
+            <small style="color: var(--text-muted); font-size: var(--text-xs);">Supported formats: PDF, JPG, PNG, DOC, DOCX</small>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Description (optional)</label>
+            <textarea id="doc-desc" class="form-input" rows="2" placeholder="Brief description of the document"></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary" style="width: 100%;">Upload Document</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/api.js?v=8"></script>
+  <script src="js/auth.js?v=8"></script>
+  <script src="js/event.js?v=8"></script>
 </body>
 </html>

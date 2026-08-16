@@ -20,6 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupEditEventForm(eventId);
   setupCreateTaskForm(eventId);
   setupFinanceForm(eventId);
+  setupUploadDocForm(eventId);
 });
 
 let currentEvent = null;
@@ -73,12 +74,26 @@ async function loadEvent(id) {
       document.getElementById('btn-assign-role').style.display = 'block';
       document.getElementById('btn-create-task').style.display = 'block';
       document.getElementById('btn-add-finance').style.display = 'block';
+      document.getElementById('btn-upload-doc').style.display = 'block';
+      document.getElementById('btn-create-chat').style.display = 'block';
       document.getElementById('event-admin-actions').style.display = 'flex';
+    }
+    
+    // Load QR code info if available
+    if (event.qr_code_url) {
+      document.getElementById('qr-formbricks-link').value = event.qr_code_url;
+    }
+    
+    // Load Matrix room if available
+    if (event.matrix_room_id) {
+      renderMatrixChat(event.matrix_room_id);
     }
     
     loadRoles(id);
     loadTasks(id);
     loadFinance(id);
+    loadRSVP(id);
+    loadDocuments(id);
   } catch (err) {
     console.error('Failed to load event:', err);
   }
@@ -345,6 +360,31 @@ function setupFinanceForm(eventId) {
   if (!form) return;
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
+    
+    const proofFile = document.getElementById('finance-proof').files[0];
+    let proofUrl = null;
+    
+    // Upload proof image if provided
+    if (proofFile) {
+      const formData = new FormData();
+      formData.append('file', proofFile);
+      try {
+        const uploadRes = await fetch('/api/v1/upload', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${window.CoolKitAPI.getToken()}`
+          },
+          body: formData
+        });
+        if (uploadRes.ok) {
+          const uploadData = await uploadRes.json();
+          proofUrl = uploadData.url;
+        }
+      } catch (err) {
+        console.error('Failed to upload proof:', err);
+      }
+    }
+    
     try {
       await window.CoolKitAPI.api(`/events/${eventId}/finance`, {
         method: 'POST',
@@ -353,7 +393,8 @@ function setupFinanceForm(eventId) {
           category: document.getElementById('finance-category').value,
           amount: parseFloat(document.getElementById('finance-amount').value),
           description: document.getElementById('finance-desc').value,
-          date: new Date(document.getElementById('finance-date').value).toISOString()
+          date: new Date(document.getElementById('finance-date').value).toISOString(),
+          proof_image: proofUrl
         })
       });
       document.getElementById('add-finance-modal').classList.remove('active');
@@ -361,6 +402,249 @@ function setupFinanceForm(eventId) {
       loadFinance(eventId);
     } catch (err) { alert('Failed to add entry: ' + (err.message || '')); }
   });
+}
+
+// ─── RSVP Functions ──────────────────────────────
+async function loadRSVP(eventId) {
+  try {
+    // Load RSVP counts
+    const countsRes = await window.CoolKitAPI.api(`/events/${eventId}/rsvp-counts`);
+    const counts = countsRes.data;
+    document.getElementById('rsvp-going').textContent = counts.going || 0;
+    document.getElementById('rsvp-interested').textContent = counts.interested || 0;
+    document.getElementById('rsvp-not-going').textContent = counts.not_going || 0;
+    
+    // Load user's RSVP
+    try {
+      const userRes = await window.CoolKitAPI.api(`/events/${eventId}/rsvp`);
+      const userRsvp = userRes.data;
+      renderUserRSVP(userRsvp);
+    } catch (err) {
+      // No RSVP yet
+      renderUserRSVP(null);
+    }
+    
+    // Load attendee list (for admins)
+    if (window._isAdmin) {
+      const attendeesRes = await window.CoolKitAPI.api(`/events/${eventId}/rsvps`);
+      renderAttendeeList(attendeesRes.data || []);
+    }
+  } catch (err) {
+    console.error('Failed to load RSVP:', err);
+  }
+}
+
+function renderUserRSVP(rsvp) {
+  const statusDiv = document.getElementById('rsvp-user-status');
+  const actionsDiv = document.getElementById('rsvp-actions');
+  
+  if (!rsvp) {
+    statusDiv.innerHTML = '<p style="color: var(--text-muted);">You haven\'t responded yet.</p>';
+    actionsDiv.style.display = 'flex';
+    return;
+  }
+  
+  const statusLabels = {
+    'going': '✅ Going',
+    'interested': '🤔 Interested',
+    'not_going': '❌ Not Going'
+  };
+  
+  statusDiv.innerHTML = `<span class="badge badge-primary" style="font-size: var(--text-base); padding: var(--spacing-2) var(--spacing-3);">${statusLabels[rsvp.status] || 'Unknown'}</span>`;
+  actionsDiv.style.display = 'none';
+}
+
+async function submitRSVP(status) {
+  try {
+    await window.CoolKitAPI.api(`/events/${window._eventId}/rsvp`, {
+      method: 'POST',
+      body: JSON.stringify({ status })
+    });
+    loadRSVP(window._eventId);
+  } catch (err) {
+    alert('Failed to submit RSVP: ' + (err.message || ''));
+  }
+}
+
+function renderAttendeeList(rsvps) {
+  const container = document.getElementById('rsvp-attendees-list');
+  container.innerHTML = '';
+  
+  if (rsvps.length === 0) {
+    container.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: var(--spacing-4);">No responses yet.</p>';
+    return;
+  }
+  
+  const byStatus = { going: [], interested: [], not_going: [] };
+  rsvps.forEach(r => {
+    if (byStatus[r.status]) byStatus[r.status].push(r);
+  });
+  
+  const renderSection = (status, title, icon) => {
+    if (byStatus[status].length === 0) return;
+    const section = document.createElement('div');
+    section.style.marginBottom = 'var(--spacing-4)';
+    section.innerHTML = `<h5 style="margin-bottom: var(--spacing-2); color: var(--text-secondary);">${icon} ${title} (${byStatus[status].length})</h5>`;
+    const list = document.createElement('div');
+    byStatus[status].forEach(r => {
+      const item = document.createElement('div');
+      item.className = 'card';
+      item.style.marginBottom = 'var(--spacing-2)';
+      item.style.padding = 'var(--spacing-2)';
+      item.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div style="display: flex; align-items: center; gap: var(--spacing-2);">
+            <div class="avatar" style="width: 32px; height: 32px; font-size: 14px;">${(r.user?.name || '?').charAt(0).toUpperCase()}</div>
+            <div>
+              <div style="font-weight: 500;">${r.user?.name || 'Unknown'}</div>
+              <div style="font-size: var(--text-xs); color: var(--text-muted);">${r.user?.email || ''}</div>
+            </div>
+          </div>
+          ${r.checked_in ? '<span class="badge badge-success">Checked In</span>' : ''}
+        </div>
+      `;
+      list.appendChild(item);
+    });
+    section.appendChild(list);
+    container.appendChild(section);
+  };
+  
+  renderSection('going', 'Going', '✅');
+  renderSection('interested', 'Interested', '🤔');
+  renderSection('not_going', 'Not Going', '❌');
+}
+
+function showQRCode() {
+  const link = document.getElementById('qr-formbricks-link').value;
+  const container = document.getElementById('qr-code-container');
+  
+  if (!link) {
+    container.innerHTML = '<p style="color: var(--accent-rose);">No QR code configured for this event. Admin should update the event with Formbricks survey link.</p>';
+  } else {
+    // Generate QR code using a simple API
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(link)}`;
+    container.innerHTML = `<img src="${qrUrl}" alt="QR Code" style="border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: var(--spacing-3); background: white;">`;
+  }
+  
+  document.getElementById('qr-code-modal').classList.add('active');
+}
+
+// ─── Documents Functions ──────────────────────────────
+async function loadDocuments(eventId) {
+  try {
+    const res = await window.CoolKitAPI.api(`/events/${eventId}/documents`);
+    const docs = res.data || [];
+    renderDocuments(docs);
+  } catch (err) {
+    console.error('Failed to load documents:', err);
+  }
+}
+
+function renderDocuments(docs) {
+  const container = document.getElementById('documents-list');
+  container.innerHTML = '';
+  
+  if (docs.length === 0) {
+    container.innerHTML = '<div class="empty-state"><div style="font-size: 48px; margin-bottom: var(--spacing-4);">📄</div><h3>No documents uploaded</h3><p>Admins can upload permission letters, invoices, and other event documents.</p></div>';
+    return;
+  }
+  
+  docs.forEach(doc => {
+    const el = document.createElement('div');
+    el.className = 'card';
+    el.style.marginBottom = 'var(--spacing-3)';
+    const date = new Date(doc.created_at).toLocaleDateString();
+    const typeIcons = {
+      'permission_letter': '📜',
+      'invoice': '🧾',
+      'receipt': '💵',
+      'contract': '📋',
+      'other': '📄'
+    };
+    
+    el.innerHTML = `
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div style="display: flex; align-items: center; gap: var(--spacing-3);">
+          <div style="font-size: 32px;">${typeIcons[doc.document_type] || '📄'}</div>
+          <div>
+            <div style="font-weight: 600;">${doc.title}</div>
+            <div style="font-size: var(--text-sm); color: var(--text-muted);">${doc.description || 'No description'} • Uploaded ${date}</div>
+          </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: var(--spacing-2);">
+          <a href="${doc.file_url}" target="_blank" class="btn btn-primary btn-sm">Download</a>
+          ${window._isAdmin ? `<button class="btn btn-ghost btn-sm" style="color: var(--accent-rose);" onclick="deleteDocument('${doc.id}')">🗑</button>` : ''}
+        </div>
+      </div>
+    `;
+    container.appendChild(el);
+  });
+}
+
+async function deleteDocument(docId) {
+  if (!confirm('Delete this document?')) return;
+  try {
+    await window.CoolKitAPI.api(`/documents/${docId}`, { method: 'DELETE' });
+    loadDocuments(window._eventId);
+  } catch (err) {
+    alert('Failed to delete document.');
+  }
+}
+
+function setupUploadDocForm(eventId) {
+  const form = document.getElementById('upload-doc-form');
+  if (!form) return;
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const file = document.getElementById('doc-file').files[0];
+    if (!file) {
+      alert('Please select a file to upload.');
+      return;
+    }
+    
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('title', document.getElementById('doc-title').value);
+    formData.append('document_type', document.getElementById('doc-type').value);
+    formData.append('description', document.getElementById('doc-desc').value);
+    
+    try {
+      await window.CoolKitAPI.api(`/events/${eventId}/documents`, {
+        method: 'POST',
+        body: formData,
+        headers: {} // Let browser set Content-Type for FormData
+      });
+      document.getElementById('upload-doc-modal').classList.remove('active');
+      form.reset();
+      loadDocuments(eventId);
+    } catch (err) {
+      alert('Failed to upload document: ' + (err.message || ''));
+    }
+  });
+}
+
+// ─── Matrix Chat Functions ──────────────────────────────
+function createMatrixRoom() {
+  const roomName = `Event-${currentEvent.title.replace(/\s+/g, '-')}`;
+  alert('Matrix room creation requires server-side integration. Please configure matrix_room_id in the event settings manually or use Element web interface to create a room and share the room ID.');
+  // In production, this would call an API endpoint to create a Matrix room
+}
+
+function renderMatrixChat(roomId) {
+  const container = document.getElementById('chat-container');
+  container.innerHTML = `
+    <div style="width: 100%; height: 500px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--bg-secondary); border-radius: var(--radius-lg); padding: var(--spacing-6);">
+      <div style="font-size: 48px; margin-bottom: var(--spacing-4);">💬</div>
+      <h4 style="margin-bottom: var(--spacing-2);">Matrix Chat Room</h4>
+      <p style="color: var(--text-muted); margin-bottom: var(--spacing-4);">Room ID: ${roomId}</p>
+      <a href="https://app.element.io/#/room/${roomId}" target="_blank" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: var(--spacing-2);">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+        Open in Element
+      </a>
+      <p style="font-size: var(--text-sm); color: var(--text-muted); margin-top: var(--spacing-3);">Or join using any Matrix client with room ID: ${roomId}</p>
+    </div>
+  `;
 }
 
 // ─── Tabs ──────────────────────────────
