@@ -27,9 +27,10 @@ func NewFinanceHandler(financeRepo *repository.FinanceRepository, eventRepo *rep
 type CreateFinanceRequest struct {
 	Type        string    `json:"type" binding:"required"`
 	Category    string    `json:"category" binding:"required"`
-	Amount      float64   `json:"amount" binding:"required"`
+	Amount      float64   `json:"amount" binding:"required,min=0.01"`
 	Description string    `json:"description"`
 	Date        time.Time `json:"date" binding:"required"`
+	ProofImage  string    `json:"proof_image"`
 }
 
 func (h *FinanceHandler) Create(c *gin.Context) {
@@ -59,15 +60,17 @@ func (h *FinanceHandler) Create(c *gin.Context) {
 	}
 
 	var memberRole string
+	isMember := false
 	for _, m := range members {
 		if m.UserID == userID {
 			memberRole = m.Role
+			isMember = true
 			break
 		}
 	}
 
-	if memberRole != model.RoleOwner && memberRole != model.RoleAdmin {
-		response.Unauthorized(c, "Only club owners and admins can create finance entries")
+	if !isMember {
+		response.Unauthorized(c, "You must be a club member to create finance entries")
 		return
 	}
 
@@ -82,6 +85,12 @@ func (h *FinanceHandler) Create(c *gin.Context) {
 		return
 	}
 
+	status := model.FinanceStatusPending
+	if memberRole == model.RoleOwner || memberRole == model.RoleAdmin {
+		status = model.FinanceStatusApproved
+	}
+
+	now := time.Now()
 	entry := &model.FinanceEntry{
 		EventID:     eventID,
 		CreatedByID: userID,
@@ -90,6 +99,20 @@ func (h *FinanceHandler) Create(c *gin.Context) {
 		Amount:      req.Amount,
 		Description: req.Description,
 		Date:        req.Date,
+		ProofImage:  req.ProofImage,
+		Status:      status,
+		ApprovedByID: func() *uuid.UUID {
+			if status == model.FinanceStatusApproved {
+				return &userID
+			}
+			return nil
+		}(),
+		ApprovedAt: func() *time.Time {
+			if status == model.FinanceStatusApproved {
+				return &now
+			}
+			return nil
+		}(),
 	}
 
 	if err := h.financeRepo.Create(entry); err != nil {
@@ -107,13 +130,48 @@ func (h *FinanceHandler) List(c *gin.Context) {
 		return
 	}
 
-	_, err = h.eventRepo.FindByID(eventID)
+	userIDVal, exists := c.Get("user_id")
+	if !exists {
+		response.Unauthorized(c, "Unauthorized")
+		return
+	}
+	userID := userIDVal.(uuid.UUID)
+
+	event, err := h.eventRepo.FindByID(eventID)
 	if err != nil {
 		response.NotFound(c, "Event not found")
 		return
 	}
 
-	entries, err := h.financeRepo.FindByEventID(eventID)
+	members, err := h.clubRepo.FindMembers(event.ClubID)
+	if err != nil {
+		response.InternalError(c, "Failed to retrieve club members")
+		return
+	}
+
+	var memberRole string
+	isAdmin := false
+	for _, m := range members {
+		if m.UserID == userID {
+			memberRole = m.Role
+			if m.Role == model.RoleOwner || m.Role == model.RoleAdmin {
+				isAdmin = true
+			}
+			break
+		}
+	}
+
+	if memberRole == "" {
+		response.Unauthorized(c, "You must be a club member to view finance entries")
+		return
+	}
+
+	var entries []model.FinanceEntry
+	if isAdmin {
+		entries, err = h.financeRepo.FindByEventID(eventID)
+	} else {
+		entries, err = h.financeRepo.FindApprovedByEventID(eventID)
+	}
 	if err != nil {
 		response.InternalError(c, "Failed to retrieve finance entries")
 		return
@@ -192,4 +250,81 @@ func (h *FinanceHandler) Delete(c *gin.Context) {
 	}
 
 	response.OK(c, map[string]string{"message": "Finance entry deleted successfully"})
+}
+
+type ApproveFinanceRequest struct {
+	Approved bool   `json:"approved"`
+	Reason   string `json:"reason"`
+}
+
+func (h *FinanceHandler) Approve(c *gin.Context) {
+	id, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		response.BadRequest(c, "Invalid finance ID")
+		return
+	}
+
+	userIDVal, exists := c.Get("user_id")
+	if !exists {
+		response.Unauthorized(c, "Unauthorized")
+		return
+	}
+	userID := userIDVal.(uuid.UUID)
+
+	entry, err := h.financeRepo.FindByID(id)
+	if err != nil {
+		response.NotFound(c, "Finance entry not found")
+		return
+	}
+
+	event, err := h.eventRepo.FindByID(entry.EventID)
+	if err != nil {
+		response.NotFound(c, "Event not found")
+		return
+	}
+
+	members, err := h.clubRepo.FindMembers(event.ClubID)
+	if err != nil {
+		response.InternalError(c, "Failed to retrieve club members")
+		return
+	}
+
+	isAdmin := false
+	for _, m := range members {
+		if m.UserID == userID {
+			if m.Role == model.RoleOwner || m.Role == model.RoleAdmin {
+				isAdmin = true
+			}
+			break
+		}
+	}
+
+	if !isAdmin {
+		response.Unauthorized(c, "Only club owners and admins can approve finance entries")
+		return
+	}
+
+	var req ApproveFinanceRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, err.Error())
+		return
+	}
+
+	now := time.Now()
+	if req.Approved {
+		err = h.financeRepo.UpdateStatus(id, model.FinanceStatusApproved, &userID, &now, "")
+	} else {
+		err = h.financeRepo.UpdateStatus(id, model.FinanceStatusRejected, &userID, &now, req.Reason)
+	}
+
+	if err != nil {
+		response.InternalError(c, "Failed to update finance entry status")
+		return
+	}
+
+	status := "approved"
+	if !req.Approved {
+		status = "rejected"
+	}
+	response.OK(c, map[string]string{"message": "Finance entry " + status + " successfully"})
 }

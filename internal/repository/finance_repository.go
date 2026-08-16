@@ -1,6 +1,8 @@
 package repository
 
 import (
+	"time"
+
 	"github.com/coolkit-org/coolkit/internal/model"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -37,6 +39,28 @@ func (r *FinanceRepository) Delete(id uuid.UUID) error {
 	return r.db.Delete(&model.FinanceEntry{}, id).Error
 }
 
+func (r *FinanceRepository) FindApprovedByEventID(eventID uuid.UUID) ([]model.FinanceEntry, error) {
+	var entries []model.FinanceEntry
+	err := r.db.Where("event_id = ? AND status = ?", eventID, model.FinanceStatusApproved).Preload("CreatedBy").Order("date DESC").Find(&entries).Error
+	return entries, err
+}
+
+func (r *FinanceRepository) UpdateStatus(id uuid.UUID, status string, approvedByID *uuid.UUID, approvedAt *time.Time, rejectionReason string) error {
+	updates := map[string]interface{}{
+		"status": status,
+	}
+	if approvedByID != nil {
+		updates["approved_by_id"] = approvedByID
+	}
+	if approvedAt != nil {
+		updates["approved_at"] = approvedAt
+	}
+	if status == model.FinanceStatusRejected && rejectionReason != "" {
+		updates["rejection_reason"] = rejectionReason
+	}
+	return r.db.Model(&model.FinanceEntry{}).Where("id = ?", id).Updates(updates).Error
+}
+
 func (r *FinanceRepository) GetSummary(eventID uuid.UUID) (float64, float64, error) {
 	var results []struct {
 		Type  string
@@ -45,7 +69,7 @@ func (r *FinanceRepository) GetSummary(eventID uuid.UUID) (float64, float64, err
 	
 	err := r.db.Model(&model.FinanceEntry{}).
 		Select("type, sum(amount) as total").
-		Where("event_id = ?", eventID).
+		Where("event_id = ? AND status = ?", eventID, model.FinanceStatusApproved).
 		Group("type").
 		Scan(&results).Error
 

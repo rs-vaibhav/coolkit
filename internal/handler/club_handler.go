@@ -285,3 +285,42 @@ func (h *ClubHandler) UpdateSettings(c *gin.Context) {
 
 	response.OK(c, gin.H{"message": "Club settings updated successfully"})
 }
+
+type UpdateClubImagesRequest struct {
+	ProfileImage string `json:"profile_image"`
+	BannerImage  string `json:"banner_image"`
+}
+
+func (h *ClubHandler) UpdateClubImages(c *gin.Context) {
+	clubIDStr := c.Param("id")
+	clubID, err := uuid.Parse(clubIDStr)
+	if err != nil {
+		response.BadRequest(c, "Invalid club ID")
+		return
+	}
+
+	userIDVal, exists := c.Get("user_id")
+	if !exists {
+		response.Unauthorized(c, "User ID not found in context")
+		return
+	}
+	userID := userIDVal.(uuid.UUID)
+
+	var req UpdateClubImagesRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, err.Error())
+		return
+	}
+
+	err = h.clubService.UpdateClubImages(clubID, userID, req.ProfileImage, req.BannerImage)
+	if err != nil {
+		if err == service.ErrNotAuthorized {
+			response.Unauthorized(c, err.Error())
+			return
+		}
+		response.InternalError(c, err.Error())
+		return
+	}
+
+	response.OK(c, gin.H{"message": "Club images updated successfully"})
+}

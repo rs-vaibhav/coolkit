@@ -50,6 +50,7 @@ func Setup(
 			protected.GET("/clubs", clubHandler.List)
 			protected.GET("/clubs/:id", clubHandler.Get)
 			protected.PUT("/clubs/:id/settings", clubHandler.UpdateSettings)
+			protected.PUT("/clubs/:id/images", clubHandler.UpdateClubImages)
 			protected.POST("/clubs/join", clubHandler.Join)
 			protected.GET("/clubs/:id/members", clubHandler.Members)
 			
@@ -92,6 +93,7 @@ func Setup(
 			protected.POST("/events/:id/finance", financeHandler.Create)
 			protected.GET("/events/:id/finance", financeHandler.List)
 			protected.DELETE("/finance/:id", financeHandler.Delete)
+			protected.POST("/finance/:id/approve", financeHandler.Approve)
 
 			// Hierarchy & Domains
 			protected.POST("/clubs/:id/hierarchy", hierarchyHandler.SetHierarchy)

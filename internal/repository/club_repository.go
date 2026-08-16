@@ -93,3 +93,17 @@ func (r *ClubRepository) UpdateSettings(clubID uuid.UUID, ownerLabel, adminLabel
 		"leadership_label": leadershipLabel,
 	}).Error
 }
+
+func (r *ClubRepository) UpdateClubImages(clubID uuid.UUID, profileImage, bannerImage string) error {
+	updates := make(map[string]interface{})
+	if profileImage != "" {
+		updates["profile_image"] = profileImage
+	}
+	if bannerImage != "" {
+		updates["banner_image"] = bannerImage
+	}
+	if len(updates) == 0 {
+		return nil
+	}
+	return r.db.Model(&model.Club{}).Where("id = ?", clubID).Updates(updates).Error
+}
